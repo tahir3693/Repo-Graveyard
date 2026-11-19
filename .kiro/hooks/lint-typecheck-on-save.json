@@ -1,0 +1,14 @@
+{
+    "version":  "v1",
+    "hooks":  [
+                  {
+                      "name":  "Lint and typecheck on save",
+                      "trigger":  "PostFileSave",
+                      "matcher":  "\\.tsx?$",
+                      "action":  {
+                                     "type":  "agent",
+                                     "prompt":  "A TypeScript file was saved. Run `npm run lint` and `npm run typecheck` in the project root (they are one-shot commands, never start watchers). Report every error with its file, line and message, grouped by tool. If both pass, reply with one line saying so. Do not change any files unless the user asks. Do not run other commands."
+                                 }
+                  }
+              ]
+}

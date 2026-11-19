@@ -1,0 +1,13 @@
+{
+    "version":  "v1",
+    "hooks":  [
+                  {
+                      "name":  "Update README feature list on task completion",
+                      "trigger":  "PostTaskExec",
+                      "action":  {
+                                     "type":  "agent",
+                                     "prompt":  "A spec task was just marked complete. Update the feature list in README.md. If README.md has no section titled \"Features\", add one near the top, after the project description. Rules: list one bullet per feature that is actually working in the code now (for example sign-in, scan, scoring, graveyard UI, resurrection), based on the completed tasks in .kiro/specs/*/tasks.md and on files that exist in src. Do not list planned or unfinished features as done; mark partly built ones as \"in progress\". Keep each bullet to one short line in plain language. Keep all other README content unchanged, and do not touch any other file. If nothing about the feature list changed, make no edit and say so in one line."
+                                 }
+                  }
+              ]
+}

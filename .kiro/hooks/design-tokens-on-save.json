@@ -1,0 +1,14 @@
+{
+    "version":  "v1",
+    "hooks":  [
+                  {
+                      "name":  "Check design-system tokens in components",
+                      "trigger":  "PostFileSave",
+                      "matcher":  "src[\\\\/]components[\\\\/]",
+                      "action":  {
+                                     "type":  "agent",
+                                     "prompt":  "A file in src/components was saved. Read the saved file and check it against .kiro/steering/design-system.md. Flag every hard-coded color: hex values (#fff, #ffffff), rgb(), rgba(), hsl(), hsla(), CSS named colors (for example white, black, red) except transparent and currentColor, Tailwind arbitrary color values such as bg-[#123456], and Tailwind default palette classes such as text-red-500 or bg-slate-900. Colors must come from the CSS variables in src/app/globals.css (for example var(--color-text), var(--color-ember)) or the Tailwind theme names mapped to them. Also flag spacing or radius values that are not on the design-system scale when they are obvious. For each finding give the line, the offending text and the suggested token. If the file is clean, reply with one line saying so. Do not edit the file unless the user asks."
+                                 }
+                  }
+              ]
+}

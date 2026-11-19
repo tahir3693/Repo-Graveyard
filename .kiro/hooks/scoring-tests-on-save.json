@@ -1,0 +1,14 @@
+{
+    "version":  "v1",
+    "hooks":  [
+                  {
+                      "name":  "Scoring tests on save",
+                      "trigger":  "PostFileSave",
+                      "matcher":  "src[\\\\/]lib[\\\\/](scoring|epitaphs)\\.ts$",
+                      "action":  {
+                                     "type":  "agent",
+                                     "prompt":  "src/lib/scoring.ts or src/lib/epitaphs.ts was saved. Run `npx vitest run src/lib/scoring src/lib/epitaphs` from the project root. This is a one-shot run (never watch mode) and it includes the fast-check property tests (files named *.property.test.ts). If no test files match, say so and stop. Summarize the result: number of passed and failed tests, and for each failure give the test name, the file, and for a property test the fast-check seed and the shrunk counterexample. Say which source file and rule the failure most likely points to. Do not change any files unless the user asks."
+                                 }
+                  }
+              ]
+}

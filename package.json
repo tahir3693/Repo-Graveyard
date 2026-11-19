@@ -6,9 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
+    "@google/genai": "^3.5.0",
     "framer-motion": "^14.14.0",
     "next": "16.4.6",
     "next-auth": "^4.24.15",
