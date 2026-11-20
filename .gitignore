@@ -43,3 +43,6 @@ next-env.d.ts
 # local env files (keep the example)
 .env*
 !.env.example
+
+# Playwright MCP output
+.playwright-mcp/
