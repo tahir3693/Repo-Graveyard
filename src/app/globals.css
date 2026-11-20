@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. Source of truth: .kiro/steering/design-system.md.
+ * Components use these variables only, never raw colors.
+ * The app is dark only.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+
+  /* Surfaces */
+  --color-bg: #0a0f1f; /* near-black blue, page background */
+  --color-surface: #121a31; /* cards, panels */
+  --color-surface-raised: #1b2542; /* tombstones, hovered surfaces */
+  --color-border: #2c3860;
+
+  /* Text */
+  --color-text: #ebe6d6; /* bone white */
+  --color-text-muted: #a8adc0;
+
+  /* Accent: eerie violet glow (the only accent) */
+  --color-glow: #b79cff;
+  --color-glow-soft: rgb(183 156 255 / 0.25); /* halos and shadows */
+
+  /* Failing states: ember (the only warning color) */
+  --color-ember: #ff7a45;
+  --color-ember-soft: rgb(255 122 69 / 0.25);
+
+  /* Focus */
+  --color-focus: var(--color-glow);
+
+  /* Typography: --font-cinzel and --font-inter are set by next/font in layout.tsx */
+  --font-display: var(--font-cinzel), serif;
+  --font-body: var(--font-inter), sans-serif;
+
+  /* Spacing: 4px base scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radius */
+  --radius-sm: 6px; /* chips and inputs */
+  --radius-md: 12px; /* cards and buttons */
+  --radius-lg: 20px; /* panels */
+  --radius-tomb: 40% 40% 6px 6px / 28% 28% 6px 6px; /* tombstone tops (arched) */
+  --radius-full: 9999px;
+
+  /* Motion durations */
+  --motion-fast: 200ms; /* hover, focus */
+  --motion-base: 400ms; /* enter, exit */
+  --motion-slow: 1200ms; /* loops start here; fog drift and candle flicker run 1200ms to 6000ms */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-body);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
 }
