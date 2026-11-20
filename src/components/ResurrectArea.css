@@ -1,0 +1,234 @@
+/*
+ * Resurrect area. Tokens only: see .kiro/steering/design-system.md.
+ * Plain CSS with a resurrect- prefix (CSS Modules do not work with this project's
+ * Tailwind loader rule). Animated properties: transform and opacity only.
+ */
+
+.resurrect {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.resurrect-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Stage: a small stone with fog panels that part to each side. */
+.resurrect-stage {
+  position: relative;
+  align-self: center;
+  width: 160px;
+  height: 160px;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+  pointer-events: none;
+}
+
+.resurrect-stone {
+  position: absolute;
+  top: var(--space-4);
+  left: 50%;
+  width: 80px;
+  height: 100px;
+  margin-left: -40px;
+}
+
+.resurrect-stone-body {
+  fill: var(--color-surface-raised);
+  stroke: var(--color-border);
+  stroke-width: 2;
+}
+
+.resurrect-stone-lit {
+  fill: none;
+  stroke: var(--color-glow);
+  stroke-width: 3;
+  opacity: 0;
+}
+
+.resurrect-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  margin-left: -80px;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, var(--color-glow-soft) 0%, transparent 70%);
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+.resurrect-fog {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 55%;
+  will-change: transform, opacity;
+}
+
+.resurrect-fog-left {
+  left: 0;
+}
+
+.resurrect-fog-right {
+  right: 0;
+}
+
+.resurrect-fog-body {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse 90% 70% at 50% 55%,
+    var(--color-text-muted) 0%,
+    transparent 100%
+  );
+  opacity: 1;
+}
+
+.resurrect-fog-left .resurrect-fog-body {
+  opacity: 0.55;
+}
+
+.resurrect-fog-right .resurrect-fog-body {
+  opacity: 0.45;
+}
+
+.resurrect-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-6);
+  border: 1px solid var(--color-glow);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    opacity var(--motion-fast) ease-out,
+    transform var(--motion-fast) ease-out;
+}
+
+.resurrect-button:hover {
+  opacity: 0.85;
+}
+
+.resurrect-button[aria-disabled="true"] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.resurrect-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.resurrect-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.resurrect-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.resurrect-error {
+  padding: var(--space-4);
+  border: 1px solid var(--color-ember);
+  border-radius: var(--radius-md);
+  background: var(--color-ember-soft);
+}
+
+.resurrect-error-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.resurrect-error-title:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.resurrect-error-title .resurrect-icon {
+  color: var(--color-ember);
+}
+
+.resurrect-error-text {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.resurrect-plan-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.resurrect-plan-title:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.resurrect-plan-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.resurrect-plan-list dt {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.resurrect-plan-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Reduced motion: no loops, no sliding. Each step is one short fade (set in the component). */
+@media (prefers-reduced-motion: reduce) {
+  .resurrect-glow,
+  .resurrect-fog,
+  .resurrect-fog-body {
+    will-change: auto;
+  }
+}
