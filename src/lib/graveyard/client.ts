@@ -9,6 +9,7 @@
  */
 import { z } from "zod";
 import type { RevivalPlanData } from "@/lib/graveyard/resurrect-state";
+import { IssueSuccessSchema } from "@/lib/resurrection/response";
 
 const ScannedRepoSchema = z.strictObject({
   name: z.string().min(1),
@@ -145,4 +146,82 @@ export async function resurrectRepo(
   const parsed = ResurrectResponseSchema.safeParse(json);
   if (!parsed.success) throw new GraveyardRequestError("invalid");
   return parsed.data.plan;
+}
+
+/**
+ * Error codes the issue route can return. Repeated here (not imported from
+ * `@/lib/resurrection/errors`) so the browser bundle does not pull in server modules.
+ * A unit test keeps this list equal to the server's `ERROR_CODES`.
+ */
+export const ISSUE_ERROR_CODES = [
+  "invalid_request",
+  "bad_origin",
+  "unauthenticated",
+  "token_revoked",
+  "demo_mode",
+  "demo_unavailable",
+  "repo_not_found",
+  "resurrect_busy",
+  "resurrect_rate_limited",
+  "issue_rate_limited",
+  "rate_limited",
+  "forbidden",
+  "github_unavailable",
+  "invalid_github_response",
+  "not_repo_owner",
+  "repo_archived",
+  "issues_disabled",
+  "issue_rejected",
+  "issue_result_unknown",
+  "internal_error",
+] as const;
+export type IssueErrorCode = (typeof ISSUE_ERROR_CODES)[number] | "generic";
+const IssueErrorBodySchema = z.object({
+  error: z.object({
+    code: z.enum(ISSUE_ERROR_CODES),
+    retryAfterSeconds: z.number().int().min(1).optional(),
+  }),
+});
+export type FileIssueResult =
+  | { ok: true; issueUrl: string; number: number }
+  | { ok: false; code: IssueErrorCode; retryAfterSeconds?: number };
+const GENERIC_FAILURE: FileIssueResult = { ok: false, code: "generic" };
+/**
+ * POST /api/issue with only `repo`, `title` and `body`. The server resolves the owner from
+ * the session. Returns a safe result: on failure only a known error code, never response
+ * text. Never throws and never logs.
+ */
+export async function fileIssue(
+  repo: string,
+  issue: { title: string; body: string },
+  fetchImpl: FetchLike = defaultFetch,
+): Promise<FileIssueResult> {
+  let response: Response;
+  try {
+    response = await fetchImpl("/api/issue", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repo, title: issue.title, body: issue.body }),
+    });
+  } catch {
+    return GENERIC_FAILURE;
+  }
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch {
+    return GENERIC_FAILURE;
+  }
+  if (response.status === 201) {
+    const parsed = IssueSuccessSchema.safeParse(json);
+    return parsed.success
+      ? { ok: true, issueUrl: parsed.data.issueUrl, number: parsed.data.number }
+      : GENERIC_FAILURE;
+  }
+  const failure = IssueErrorBodySchema.safeParse(json);
+  if (!failure.success) return GENERIC_FAILURE;
+  const { code, retryAfterSeconds } = failure.data.error;
+  return retryAfterSeconds === undefined
+    ? { ok: false, code }
+    : { ok: false, code, retryAfterSeconds };
 }

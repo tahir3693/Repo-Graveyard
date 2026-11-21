@@ -5,7 +5,7 @@ import { GraveDrawer } from "@/components/GraveDrawer";
 import { GraveyardScene } from "@/components/GraveyardScene";
 import { ResurrectArea } from "@/components/ResurrectArea";
 import { Tombstone } from "@/components/Tombstone";
-import { resurrectRepo, scanRepos } from "@/lib/graveyard/client";
+import { fileIssue, resurrectRepo, scanRepos } from "@/lib/graveyard/client";
 import { buildGraveEntries, countAlive, type GraveEntry } from "@/lib/graveyard/tombstones";
 
 type ViewState =
@@ -131,6 +131,8 @@ export function GraveyardView({ demo }: GraveyardViewProps) {
           <ResurrectArea
             repoName={open.repo.name}
             onResurrect={() => resurrectRepo(open.repo.name, { demo })}
+            demo={demo}
+            onFileIssue={(issue) => fileIssue(open.repo.name, issue)}
           />
         </GraveDrawer>
       ) : null}

@@ -19,6 +19,14 @@
     "4.2 Write property test for prompt separation": {
       "status": "passed",
       "lastRunTimestamp": 1795257249863
+    },
+    "8.2 Write property test for the issue payload": {
+      "status": "passed",
+      "lastRunTimestamp": 1795266556268
+    },
+    "8.3 Write property test for the issue URL check": {
+      "status": "passed",
+      "lastRunTimestamp": 1795266556672
     }
   },
   "executionHistory": {
@@ -606,6 +614,16 @@
         "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
         "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
         "timestamp": 1795260716416
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795267727128
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795268384873
       }
     ],
     "13.1 Add lint and bundle-leak guards": [
@@ -649,6 +667,54 @@
         "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
         "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
         "timestamp": 1795261745291
+      }
+    ],
+    "8. Issue creation": [
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795266274234
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795266618095
+      }
+    ],
+    "9.4 Implement `src/lib/resurrection/handle-issue.ts`": [
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795266690171
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795267676667
+      }
+    ],
+    "11.2 Implement `src/lib/graveyard/issue-link.ts`": [
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795268639974
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795268842634
+      }
+    ],
+    "12.3 Implement `src/components/graveyard/plan-view.tsx`": [
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795268898318
+      },
+      {
+        "executionId": "728a0f42-6d9d-4b04-91cd-7d394736e545",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795270789630
       }
     ]
   }

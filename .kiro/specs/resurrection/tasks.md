@@ -244,7 +244,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - **Property 18: Safe errors never carry upstream text**
     - **Validates: Requirements 2.7, 2.8, 2.9, 2.10, 9.7, 9.8, 11.8, 15.6**
 
-- [ ] 8. Issue creation
+- [x] 8. Issue creation
   - [ ] 8.1 Implement `src/lib/resurrection/issue.ts`
     - Export `ISSUE_FOOTER` (one line, under 120 characters), `prepareIssue`, `isExpectedIssueUrl` (case-insensitive string equality with `https://github.com/{login}/{repo}/issues/{number}`, no URL parsing), `createIssue`
     - `prepareIssue` sanitizes with `sanitizePlanText`, validates against the plan limits, then appends `"\n\n" + ISSUE_FOOTER`
@@ -282,7 +282,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `handle-resurrect.test.ts` with a fake requester, fake session and fake LLM covering Requirement 16.8 for this route: unauthenticated, bad origin, invalid body, rate limited, busy, token revoked on read, GitHub rate limit, GitHub 403, repo not found, GitHub unavailable, demo not configured, demo 401. Each asserts status, code, and that the body holds no token or fake secret. Assert zero non-GET requests in every test and zero GitHub/LLM calls when rejected early
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 8.10, 8.12, 8.13, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 15.6, 16.8, 16.9_
 
-  - [ ] 9.4 Implement `src/lib/resurrection/handle-issue.ts`
+  - [x] 9.4 Implement `src/lib/resurrection/handle-issue.ts`
     - Export `IssueDeps` and `handleIssue(deps, req)`: origin, content type, size, schema, `prepareIssue` (400 before limiter and GitHub), `demo` true gives 403 `demo_mode` without reading the session, `readUserToken` (401), issue limiter (429), `GET /repos/{login}/{repo}` with `RepoWithIssuesSchema`, owner check (case-insensitive), archived, `has_issues`, `createIssue`, 201 validated with `IssueSuccessSchema`
     - Never import `service.ts`, `llm.ts` or `context.ts`. The owner path segment is always the session login. Log only `{ code, requestId }`
     - Write `handle-issue.test.ts` covering the issue cases of Requirement 16.8: unauthenticated, bad origin, invalid body, demo mode, rate limited, token revoked, GitHub rate limit, 403, repo not found, not owner, archived, issues disabled, 410, 422, timeout, invalid response. Assert exactly one POST with only `title` and `body` on success and zero issue POSTs in every rejected case
@@ -293,7 +293,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `deps.test.ts`: fakes selected only with `E2E_FAKES=1`, ignored with `VERCEL_ENV=production`, no `makeLlmClient` result when the key is missing, `log` drops any extra fields
     - _Requirements: 5.6, 5.7, 15.9, 18.2_
 
-  - [ ] 9.6 Create the route files
+  - [x] 9.6 Create the route files
     - Read the Next.js route handler docs first. Create `src/app/api/resurrect/route.ts` (`export const maxDuration = 70`, `POST` calling `handleResurrect(createResurrectionDeps(process.env), req)`) and `src/app/api/issue/route.ts` (`maxDuration = 30`, `POST` calling `handleIssue`)
     - Export only `POST` and `maxDuration`. No `runtime`, `dynamic` or `revalidate` (Cache Components is enabled)
     - Write `route.test.ts` for each route asserting the module exports exactly `POST` and `maxDuration` and no `GET`
@@ -308,7 +308,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `copy.test.ts`: exact text of each sentence, `{n}` formatting, `HH:mm UTC` suffix, and a loop that applies `containsBannedWord` to every string
     - _Requirements: 9.1, 9.9, 12.8, 12.9, 12.10, 12.11, 12.12, 12.13, 14.3, 14.6, 14.7, 14.8, 14.9, 14.10, 14.11, 14.12, 14.14, 15.1_
 
-  - [ ] 11.2 Implement `src/lib/graveyard/issue-link.ts`
+  - [x] 11.2 Implement `src/lib/graveyard/issue-link.ts`
     - Export `safeIssueLink(url)`: returns the URL only for protocol `https:`, hostname `github.com`, empty port, no username or password; `null` otherwise or when it does not parse
     - Write `issue-link.test.ts` with accepted and rejected examples
     - _Requirements: 14.6_

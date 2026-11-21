@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { mapWithConcurrency, DETAIL_CONCURRENCY } from "./concurrency";
 import { fetchRepoDetails } from "./details";
 import { classifyGitHubFailure, ScanFailureError } from "./errors";
@@ -23,6 +24,9 @@ export type ScanData = {
 
 type ScanDeps = { request: GitHubRequester; now: Date };
 
+/** One list page: an array whose entries are validated one by one later. */
+const RepoListPageSchema = z.array(z.unknown());
+
 function listRequest(account: ScanAccount, page: number): { route: string; params: Record<string, unknown> } {
   const common = { per_page: PAGE_SIZE, page, sort: "full_name", direction: "asc" };
   if (account.kind === "user") {
@@ -41,10 +45,13 @@ function fetchListPage(deps: ScanDeps, account: ScanAccount) {
       if (error instanceof ScanFailureError) throw error;
       throw new ScanFailureError(classifyGitHubFailure(error, deps.now));
     }
-    if (!Array.isArray(response.data)) {
+    // The page shape is checked with Zod here; each entry is parsed with
+    // GitHubRepoSchema in splitValidEntries before any field is read.
+    const listed = RepoListPageSchema.safeParse(response.data);
+    if (!listed.success) {
       throw new ScanFailureError({ kind: "invalid_response" });
     }
-    return { items: response.data, hasNext: parseHasNextPage(response.headers.link) };
+    return { items: listed.data, hasNext: parseHasNextPage(response.headers.link) };
   };
 }
 

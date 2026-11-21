@@ -1,7 +1,9 @@
 "use client";
 
 import { MotionConfig, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useId, useReducer, useRef, useState } from "react";
+import type { FileIssueResult, IssueErrorCode } from "@/lib/graveyard/client";
+import { safeIssueLink } from "@/lib/graveyard/issue-link";
 import {
   EFFORT_LABEL,
   initialResurrectState,
@@ -15,7 +17,51 @@ export interface ResurrectAreaProps {
   repoName: string;
   /** Fetches the revival plan from the server route. Rejects when it cannot. */
   onResurrect: () => Promise<RevivalPlanData>;
+  /** Demo graveyards are look-only: the "File this issue" button does nothing. */
+  demo: boolean;
+  /** Files the plan's issue through the server route. Resolves to a safe result, never throws. */
+  onFileIssue: (issue: { title: string; body: string }) => Promise<FileIssueResult>;
 }
+
+const DEMO_ISSUE_NOTE =
+  "Demo graveyards are look-only. Sign in with GitHub to file this issue on your own repo.";
+const ISSUE_GENERIC =
+  "GitHub would not take the issue. Check the repo's issue list before trying again.";
+const ISSUE_CHECK_LIST =
+  "GitHub did not answer. The issue may not have been created. Check the repository's issue list before trying again.";
+
+/** Fixed, kind copy per error code. Never shows response text or the code itself. */
+export function issueErrorText(code: IssueErrorCode, retryAfterSeconds?: number): string {
+  switch (code) {
+    case "unauthenticated":
+      return "The graveyard gate is locked. Sign in with GitHub to file this issue.";
+    case "token_revoked":
+      return "GitHub closed the door on our key. Sign in again to reopen the graveyard.";
+    case "not_repo_owner":
+      return "Only the repo's keeper can file issues here.";
+    case "repo_archived":
+      return "Archived repos are read-only. Unarchive it first, and it can be resurrected.";
+    case "issues_disabled":
+      return "This repo has issues switched off. Turn them on in the repo settings, then try again.";
+    case "issue_rate_limited":
+      return retryAfterSeconds === undefined
+        ? "The keeper needs a breather. Try again shortly."
+        : `The keeper needs a breather. Try again in ${retryAfterSeconds} seconds.`;
+    case "rate_limited":
+      return "GitHub needs a moment to rest. Try again soon.";
+    case "issue_result_unknown":
+    case "github_unavailable":
+      return ISSUE_CHECK_LIST;
+    default:
+      return ISSUE_GENERIC;
+  }
+}
+
+type IssueState =
+  | { phase: "idle" }
+  | { phase: "pending" }
+  | { phase: "filed"; url: string | null }
+  | { phase: "error"; text: string };
 
 const ms = (value: number) => value / 1000;
 
@@ -25,12 +71,20 @@ const ms = (value: number) => value / 1000;
  * (from 900ms). Everything ends 1400ms after the plan arrives.
  * Loading and error states use the same voice: the repo is paused, not failed.
  */
-export function ResurrectArea({ repoName, onResurrect }: ResurrectAreaProps) {
+export function ResurrectArea({
+  repoName,
+  onResurrect,
+  demo,
+  onFileIssue,
+}: ResurrectAreaProps) {
   const reduce = useReducedMotion() === true;
   const [state, dispatch] = useReducer(resurrectReducer, initialResurrectState);
   const mounted = useRef(true);
   const errorHeading = useRef<HTMLHeadingElement>(null);
   const planHeading = useRef<HTMLHeadingElement>(null);
+  const [issue, setIssue] = useState<IssueState>({ phase: "idle" });
+  const filing = useRef(false);
+  const demoNoteId = useId();
 
   useEffect(() => {
     mounted.current = true;
@@ -56,6 +110,26 @@ export function ResurrectArea({ repoName, onResurrect }: ResurrectAreaProps) {
     } catch {
       if (mounted.current) dispatch({ type: "fail" });
     }
+  };
+
+  const fileIssueNow = async (plan: RevivalPlanData) => {
+    // Demo is look-only: no request, no state change. Pending ignores repeat activations.
+    if (demo || filing.current) return;
+    filing.current = true;
+    setIssue({ phase: "pending" });
+    let result: FileIssueResult;
+    try {
+      result = await onFileIssue({ title: plan.issueTitle, body: plan.issueBody });
+    } catch {
+      result = { ok: false, code: "generic" };
+    }
+    filing.current = false;
+    if (!mounted.current) return;
+    setIssue(
+      result.ok
+        ? { phase: "filed", url: safeIssueLink(result.issueUrl) }
+        : { phase: "error", text: issueErrorText(result.code, result.retryAfterSeconds) },
+    );
   };
 
   const t = RESURRECT_TIMING;
@@ -218,6 +292,66 @@ export function ResurrectArea({ repoName, onResurrect }: ResurrectAreaProps) {
                 <dt>Effort</dt>
                 <dd>{EFFORT_LABEL[state.plan.effort]}</dd>
               </dl>
+              <section className="resurrect-issue" aria-label="Issue to file">
+                <h4 className="resurrect-issue-heading">Issue title</h4>
+                <p className="resurrect-issue-title">{state.plan.issueTitle}</p>
+                <h4 className="resurrect-issue-heading">Issue body</h4>
+                <div
+                  className="resurrect-issue-body"
+                  role="region"
+                  aria-label="Issue body, read-only preview"
+                  tabIndex={0}
+                >
+                  {state.plan.issueBody}
+                </div>
+                {issue.phase === "filed" ? (
+                  <p className="resurrect-issue-done" role="status">
+                    Issue filed. This repo has a pulse again.
+                    {issue.url !== null ? (
+                      <>
+                        {" "}
+                        <a
+                          className="resurrect-issue-link"
+                          href={issue.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View the issue on GitHub
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="resurrect-button"
+                      aria-disabled={demo || issue.phase === "pending" ? "true" : undefined}
+                      aria-describedby={demo ? demoNoteId : undefined}
+                      onClick={() => fileIssueNow(state.plan)}
+                    >
+                      File this issue
+                    </button>
+                    {demo ? (
+                      <p id={demoNoteId} className="resurrect-note">
+                        {DEMO_ISSUE_NOTE}
+                      </p>
+                    ) : null}
+                    <p
+                      className="resurrect-note"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      {issue.phase === "pending" ? "Filing\u2026" : null}
+                    </p>
+                    {issue.phase === "error" ? (
+                      <p className="resurrect-issue-error" role="alert">
+                        {issue.text}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              </section>
             </motion.div>
           </>
         ) : null}

@@ -31,6 +31,30 @@ describe("readGitHubApiBaseUrl", () => {
     expect(readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: "not a url" })).toBeNull();
     expect(readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: "file:///etc/passwd" })).toBeNull();
   });
+
+  it("accepts only loopback hosts, so a token can never leave the machine", () => {
+    expect(readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: "http://localhost:3101" })).toBe(
+      "http://localhost:3101",
+    );
+    expect(readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: "http://[::1]:3101" })).toBe(
+      "http://[::1]:3101",
+    );
+    for (const url of [
+      "https://attacker.example",
+      "https://api.github.com.attacker.example",
+      "http://127.0.0.1.attacker.example",
+      "http://10.0.0.5:3101",
+      "http://user:pw@evil.example@127.0.0.1",
+    ]) {
+      expect(readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: url }), url).toBeNull();
+    }
+  });
+
+  it("is ignored on Vercel production even for a loopback URL", () => {
+    expect(
+      readGitHubApiBaseUrl({ GITHUB_API_BASE_URL: "http://127.0.0.1:3101", VERCEL_ENV: "production" }),
+    ).toBeNull();
+  });
 });
 
 beforeEach(() => {

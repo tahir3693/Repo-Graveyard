@@ -22,7 +22,7 @@ Status: **built** works today, **specified** has a full spec but no code yet.
 - **Scan** (built): `POST /api/scan` reads up to 300 repos on the server, skips forks by default, validates every GitHub response with Zod and returns typed errors.
 - **Death score** (built): `scoreRepo` gives a 0 to 100 score, a status, a cause of death, an epitaph and scene values from fixed rules; only the status and cause rules are tested so far. No AI in scoring.
 - **Graveyard page** (in progress): one tombstone per repo and an accessible detail drawer are built; summary, filters, sorting and the list view are not.
-- **Resurrect** (built): `POST /api/resurrect` asks Gemini for a revival plan from read-only repo data, with a rule-built fallback plan. **File this issue** is not built yet.
+- **Resurrect** (built): `POST /api/resurrect` asks Gemini for a revival plan from read-only repo data, with a rule-built fallback plan. **File this issue** is in progress: `POST /api/issue` files the plan to the signed-in owner's repo and refuses demo mode; the button is not in the UI yet.
 - **Demo mode** (built): `/graveyard?demo=1` scans a fixed public account and writes revival plans with no login.
 
 Every spooky element carries data. Fog thickness is days of inactivity, a lit candle is recent activity, cracks are failing CI, vines are outdated dependencies, and a bigger stone is more stars.

@@ -28,15 +28,27 @@ function normalizeHeaders(
   return result;
 }
 
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
+
 /**
- * Reads the optional server-only `GITHUB_API_BASE_URL` override (used by tests
- * to point at a local mock). Returns `null` unless it is a valid http(s) URL.
+ * Reads the optional server-only `GITHUB_API_BASE_URL` override (used by e2e tests
+ * to point at a local mock). Returns `null` unless it is a valid http(s) URL on a
+ * loopback host, and always `null` on Vercel production. A user token can therefore
+ * never be sent to another machine, even if the variable is set by mistake.
+ * (`NODE_ENV` is not used: the e2e run is a production `next start`.)
  */
 export function readGitHubApiBaseUrl(env: Record<string, string | undefined>): string | null {
+  if (env.VERCEL_ENV === "production") return null;
   const value = env.GITHUB_API_BASE_URL?.trim();
   if (!value) return null;
   const parsed = z.url({ protocol: /^https?$/ }).safeParse(value);
-  return parsed.success ? value.replace(/\/+$/, "") : null;
+  if (!parsed.success) return null;
+  const url = new URL(parsed.data);
+  // No embedded credentials: they are never needed for a local mock and make
+  // misleading URLs like `http://x@evil.example@127.0.0.1` possible.
+  if (url.username !== "" || url.password !== "") return null;
+  if (!LOOPBACK_HOSTS.has(url.hostname)) return null;
+  return value.replace(/\/+$/, "");
 }
 
 export function createOctokitRequester(
