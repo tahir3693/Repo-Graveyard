@@ -1,0 +1,655 @@
+{
+  "pbtResults": {
+    "2.4 Write property test for `parsePlan` safety": {
+      "status": "passed",
+      "lastRunTimestamp": 1795253869019
+    },
+    "2.5 Write property test for plan round trip": {
+      "status": "passed",
+      "lastRunTimestamp": 1795253862667
+    },
+    "2.6 Write property test for extra fields": {
+      "status": "passed",
+      "lastRunTimestamp": 1795253863326
+    },
+    "2.7 Write property test for `sanitizePlanText`": {
+      "status": "passed",
+      "lastRunTimestamp": 1795253863785
+    },
+    "4.2 Write property test for prompt separation": {
+      "status": "passed",
+      "lastRunTimestamp": 1795257249863
+    }
+  },
+  "executionHistory": {
+    "1. Foundation and flagged-assumption checks": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795252798321
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253153422
+      }
+    ],
+    "1.1 Verify tooling, prerequisites and add the network blocker": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253266534
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253374514
+      }
+    ],
+    "1.2 Verify the `BANNED_WORDS` export from `@/lib/epitaphs`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253267130
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253375175
+      }
+    ],
+    "1.3 Verify the manifest-date function export in `src/lib/github/details.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253267660
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253376631
+      }
+    ],
+    "1.4 Add `LLM_MODEL` to `.env.example` (names only)": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253268737
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253377190
+      }
+    ],
+    "1.5 Create `src/lib/resurrection/limits.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253269452
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253378786
+      }
+    ],
+    "2. Text helpers and revival plan parsing": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253446467
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254006524
+      }
+    ],
+    "3.1 Implement `read-only.ts` and `github-schemas.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253446831
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254007518
+      }
+    ],
+    "4.3 Implement `src/lib/llm.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253447402
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254008380
+      }
+    ],
+    "7.1 Implement `rate-limit.ts`, `inflight.ts` and `state.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253447633
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254009364
+      }
+    ],
+    "2.1 Implement `src/lib/resurrection/text.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253923109
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253999864
+      }
+    ],
+    "2.2 Write property test for `capText`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253923307
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254000928
+      }
+    ],
+    "2.3 Implement `src/lib/resurrection/plan.ts` (client-safe)": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253923871
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254002364
+      }
+    ],
+    "2.4 Write property test for `parsePlan` safety": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253925401
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254003592
+      }
+    ],
+    "2.5 Write property test for plan round trip": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253927175
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254004296
+      }
+    ],
+    "2.6 Write property test for extra fields": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253927582
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254004869
+      }
+    ],
+    "2.7 Write property test for `sanitizePlanText`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795253928449
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254006386
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256825224
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257518193
+      }
+    ],
+    "3. Context gathering and capping": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254056564
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256355189
+      }
+    ],
+    "7. Rate limiting, request validation and safe errors": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254057236
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256365810
+      }
+    ],
+    "4.4 Implement `src/lib/llm-gemini.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795254057929
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256367094
+      }
+    ],
+    "3.2 Write property test for the read-only guard": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256244817
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256349683
+      }
+    ],
+    "3.3 Implement `src/lib/resurrection/context.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256245515
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256351300
+      }
+    ],
+    "3.4 Write property test for bundle caps": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256246211
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256351755
+      }
+    ],
+    "3.5 Write property test for list builders": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256247451
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256353222
+      }
+    ],
+    "3.6 Implement `src/lib/resurrection/gather.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256248826
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256355038
+      }
+    ],
+    "7.2 Write property test for the sliding window": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256250045
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256356203
+      }
+    ],
+    "7.3 Write property test for retry-after honesty": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256250983
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256357274
+      }
+    ],
+    "7.4 Write property test for the bounded store": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256253591
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256358249
+      }
+    ],
+    "7.5 Implement `src/lib/resurrection/request.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256254395
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256359459
+      }
+    ],
+    "7.6 Write property test for request schemas": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256259616
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256360365
+      }
+    ],
+    "7.7 Write property test for the origin check": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256260887
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256361459
+      }
+    ],
+    "7.8 Write property test for body size limiting": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256261368
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256362678
+      }
+    ],
+    "7.9 Implement `errors.ts` and `response.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256262104
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256364026
+      }
+    ],
+    "7.10 Write property test for safe errors": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256262698
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256365192
+      }
+    ],
+    "4. Prompt builder and LLM adapter": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795256825945
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257557454
+      }
+    ],
+    "4.2 Write property test for prompt separation": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257516458
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257557328
+      }
+    ],
+    "4.1 Implement `src/lib/resurrection/prompt.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257517399
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257556560
+      }
+    ],
+    "5. Fallback plan, retry and service": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795257600253
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258396674
+      }
+    ],
+    "5.1 Implement `src/lib/resurrection/fallback.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258332625
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258390768
+      }
+    ],
+    "5.2 Write property test for the fallback plan": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258334940
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258391862
+      }
+    ],
+    "5.3 Implement `src/lib/resurrection/attempts.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258335488
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258393806
+      }
+    ],
+    "5.4 Write property test for retry orchestration": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258335909
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258395371
+      }
+    ],
+    "5.5 Implement `src/lib/resurrection/service.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258336493
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258396471
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258559645
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258857671
+      }
+    ],
+    "9.2 Implement `src/lib/resurrection/config.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795258859502
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795259174589
+      }
+    ],
+    "9.3 Implement `src/lib/resurrection/handle-resurrect.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795259175149
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260080870
+      }
+    ],
+    "9.5 Implement `src/lib/resurrection/deps.ts`": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260082108
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260454411
+      }
+    ],
+    "9.6 Create the route files": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260455412
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260716416
+      }
+    ],
+    "13.1 Add lint and bundle-leak guards": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795260717017
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261060361
+      }
+    ],
+    "13.2 Verify `serverExternalPackages` for `@google/genai` and the route segment config": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261061173
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261364366
+      }
+    ],
+    "13. Build guards and flagged-assumption verification": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261364495
+      }
+    ],
+    "10. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261366880
+      },
+      {
+        "executionId": "047715c6-3afc-4233-920d-7b8e1a3cb7cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795261745291
+      }
+    ]
+  }
+}

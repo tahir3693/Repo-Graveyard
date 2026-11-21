@@ -95,7 +95,7 @@ async function lookupReadme(request: GitHubRequester, repo: GitHubRepo, now: Dat
   return true;
 }
 
-async function lookupOutdatedDeps(
+export async function lookupOutdatedDeps(
   request: GitHubRequester,
   repo: GitHubRepo,
   now: Date,

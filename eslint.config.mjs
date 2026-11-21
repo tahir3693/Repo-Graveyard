@@ -128,6 +128,46 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  // src/app pages and layouts (anything outside src/app/api) must not import LLM or
+  // server-only resurrection modules. Route handlers under src/app/api keep access. This
+  // block replaces the octokit block for these files, so it repeats the octokit bans.
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/api/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            { name: "octokit", message: "Only src/lib/github/ may import octokit." },
+            { name: "@google/genai", message: "LLM calls are server-only." },
+          ],
+          patterns: [
+            {
+              group: ["@octokit/*"],
+              message: "Only src/lib/github/ may import @octokit/*.",
+            },
+            {
+              group: ["@/lib/llm", "@/lib/llm-gemini", "@/lib/e2e/*"],
+              message: "Server-only module. Only route handlers under src/app/api may use it.",
+            },
+            {
+              group: [
+                "@/lib/resurrection/*",
+                "!@/lib/resurrection/plan",
+                "!@/lib/resurrection/response",
+                "!@/lib/resurrection/copy",
+                "!@/lib/resurrection/limits",
+                "!@/lib/resurrection/errors",
+              ],
+              message:
+                "Server-only resurrection module. Only plan, response, copy, limits and errors are client-safe.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // Named exports only under src/lib (tech.md "Code style"). A later block that sets
   // no-restricted-syntax for the same files replaces this one, so those blocks repeat
   // these selectors.

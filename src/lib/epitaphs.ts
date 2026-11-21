@@ -175,3 +175,22 @@ export function generateEpitaph(
   const template = pool[fnv1a32(String(facts.name)) % pool.length];
   return fillTemplate(template, facts);
 }
+
+/** Words the product tone forbids in generated copy (product.md, Tone). */
+export const BANNED_WORDS: readonly string[] = [
+  "you",
+  "your",
+  "yours",
+  "yourself",
+  "failed",
+  "failure",
+  "lazy",
+  "quit",
+  "loser",
+];
+
+/** True when 	ext contains a banned word as a whole word, ignoring case. */
+export function containsBannedWord(text: string): boolean {
+  const words = text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  return words.some((word) => BANNED_WORDS.includes(word));
+}

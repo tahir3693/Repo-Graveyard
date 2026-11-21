@@ -9,6 +9,10 @@ describe("network blocking setup", () => {
     );
   });
 
+  it("rejects fetch to api.github.com with the host in the message", async () => {
+    await expect(fetch("https://api.github.com/x")).rejects.toThrow("api.github.com");
+  });
+
   it("throws on https.request and names the URL", () => {
     expect(() => https.request("https://api.github.com/rate_limit")).toThrow(
       "https://api.github.com/rate_limit",

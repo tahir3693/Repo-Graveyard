@@ -5,6 +5,7 @@ import {
   LATEST_COMMIT_ROUTE,
   README_ROUTE,
   fetchRepoDetails,
+  lookupOutdatedDeps,
 } from "./details";
 import { ScanFailureError } from "./errors";
 import type { GitHubRequester, GitHubResponse } from "./requester";
@@ -182,5 +183,17 @@ describe("detail routes", () => {
     expect(DETAIL_ROUTES.length).toBeGreaterThan(0);
     for (const route of DETAIL_ROUTES) expect(route.startsWith("GET ")).toBe(true);
     expect(LATEST_COMMIT_ROUTE.startsWith("GET ")).toBe(true);
+  });
+});
+
+describe("lookupOutdatedDeps", () => {
+  it("returns true when the latest package.json commit is stale", async () => {
+    const { request } = fake({ manifest: () => ok(commits("2024-01-01T00:00:00Z")) });
+    expect(await lookupOutdatedDeps(request, repo, NOW)).toBe(true);
+  });
+
+  it("returns null when no commit touches package.json", async () => {
+    const { request } = fake({ manifest: () => ok([]) });
+    expect(await lookupOutdatedDeps(request, repo, NOW)).toBeNull();
   });
 });

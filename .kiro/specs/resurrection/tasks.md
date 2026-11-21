@@ -18,8 +18,8 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
 
 ## Tasks
 
-- [ ] 1. Foundation and flagged-assumption checks
-  - [ ] 1.1 Verify tooling, prerequisites and add the network blocker
+- [x] 1. Foundation and flagged-assumption checks
+  - [x] 1.1 Verify tooling, prerequisites and add the network blocker
     - Check `package.json` for `vitest`, `fast-check`, `zod`, `@google/genai`, `next-auth`, `@playwright/test` and a React test library. Install any that are missing
     - Ensure Vitest resolves the `@/` alias and `npm run test` runs `vitest run`
     - Confirm these imports exist: `RepoHealth`, `GitHubRequester`, `readUserToken`, `classifyGitHubFailure`, `ScanFailureError`, `mapWithConcurrency`, `toRepoHealth`, `deriveCiStatus`, `deriveOutdatedDeps`, `readDemoConfig`, `sessionCookieNames`, `appendClearCookies`, `createOctokitRequester`, `compareCodePoint`, `scoreRepo`, `Tombstone`, `GraveEntry`, `DetailDrawer`, `formatUtcTime`. Report any that are missing
@@ -28,43 +28,43 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Add `src/test/block-network.test.ts` showing a `fetch("https://api.github.com/x")` call rejects with the host in the message
     - _Requirements: 16.2, 16.11_
 
-  - [ ] 1.2 Verify the `BANNED_WORDS` export from `@/lib/epitaphs`
+  - [x] 1.2 Verify the `BANNED_WORDS` export from `@/lib/epitaphs`
     - Check that `src/lib/epitaphs.ts` exports `BANNED_WORDS` (`you`, `your`, `yours`, `yourself`, `failed`, `failure`, `lazy`, `quit`, `loser`) and a whole-word, case-insensitive `containsBannedWord`
     - If the list lives only in a test file, move it into `src/lib/epitaphs.ts` as a named export with no behavior change, and update the existing test to import it
     - Add or extend `src/lib/epitaphs.test.ts` with a case that `containsBannedWord("Quit now")` is true and `containsBannedWord("quitting")` is false
     - _Requirements: 7.8, 15.1_
 
-  - [ ] 1.3 Verify the manifest-date function export in `src/lib/github/details.ts`
+  - [x] 1.3 Verify the manifest-date function export in `src/lib/github/details.ts`
     - Check that the function that returns the committer date of the latest commit touching root `package.json` (auth-ingestion's manifest lookup) is exported by name from `src/lib/github/details.ts`
     - If it is private, export it with no behavior change. Record its exact name and signature in a code comment above its use in `gather.ts` later
     - Add or extend `src/lib/github/details.test.ts` with a case that calls the exported function with a fake requester (date returned, empty list returns `null`)
     - _Requirements: 2.3, 2.4, 2.5_
 
-  - [ ] 1.4 Add `LLM_MODEL` to `.env.example` (names only)
+  - [x] 1.4 Add `LLM_MODEL` to `.env.example` (names only)
     - Append `LLM_MODEL=` with no value. Confirm `LLM_API_KEY=` is already listed. Do not add any `E2E_*` name or any value
     - Run `Select-String` on `.env.example` to confirm no line has a value after `=` for secret names
     - _Requirements: 5.6, 15.6_
 
-  - [ ] 1.5 Create `src/lib/resurrection/limits.ts`
+  - [x] 1.5 Create `src/lib/resurrection/limits.ts`
     - Export `RESURRECTION_LIMITS` with every constant from the requirements Constants table under the same names, plus `RESURRECT_LIMIT`, `DEMO_RESURRECT_LIMIT`, `ISSUE_LIMIT` (`WindowConfig`), `DEFAULT_LLM_MODEL = "gemini-2.5-flash-lite"` and `FALLBACK_NAME_MAX = 60`
     - No imports, so client code may use it
     - Add `limits.test.ts` asserting each value and that `CONTEXT_DEADLINE_MS + LLM_MAX_ATTEMPTS * LLM_TIMEOUT_MS` is 60,000
     - _Requirements: 3.6, 5.2, 7.10, 8.6, 8.7, 8.8_
 
-- [ ] 2. Text helpers and revival plan parsing
-  - [ ] 2.1 Implement `src/lib/resurrection/text.ts`
+- [x] 2. Text helpers and revival plan parsing
+  - [x] 2.1 Implement `src/lib/resurrection/text.ts`
     - Export `sanitizeText`, `capText`, `codePointLength`, `firstLine`
     - `sanitizeText` order: normalize `\r\n` and `\r` to `\n`, replace lone surrogates with U+FFFD (string loop, not a regex flag), remove `\p{Cc}` except `\n` and `\t`, remove U+202A to U+202E and U+2066 to U+2069
     - `capText` returns `""` for non-strings, cuts by code points with the string iterator, treats invalid `maxChars` as 0, never throws
     - Write `text.test.ts`: 6,000 and 6,001 code point boundary, a cut between two surrogates, lone surrogate, bidi removal, `null`/number/object input, `firstLine`
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-  - [ ] 2.2 Write property test for `capText`
+  - [x] 2.2 Write property test for `capText`
     - File `text.property.test.ts`
     - **Property 1: capText bounds, cleanliness and idempotence**
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
 
-  - [ ] 2.3 Implement `src/lib/resurrection/plan.ts` (client-safe)
+  - [x] 2.3 Implement `src/lib/resurrection/plan.ts` (client-safe)
     - Export `EFFORTS`, `EFFORT_LABELS`, `boundedText(min, max)` (code point count, rejects whitespace-only), `RevivalPlanSchema`, `RevivalPlan`, `Effort`, `sanitizePlanText`, `parsePlan`
     - `sanitizePlanText` steps in order: lone surrogates, control characters except `\n`, bidi overrides; HTML tag removal with `/<[^>]*>/g`; image replacement then `/!+\[/g` to `[`; `@login` wrapping outside backtick spans (split on backtick, odd count means the last part is outside)
     - `parsePlan` steps: non-string or over `LLM_RAW_MAX_CHARS` fails, trim, strip exactly one wrapping fence, `JSON.parse` of the whole text, require a plain object, sanitize the four text fields, `safeParse`. No brace search. Never throws
@@ -72,39 +72,39 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `plan.test.ts` for each case in Requirement 16.3 plus `sanitizePlanText` examples (HTML, image, `@user`, `@user` inside backticks, unclosed backtick)
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.13, 16.3_
 
-  - [ ] 2.4 Write property test for `parsePlan` safety
+  - [x] 2.4 Write property test for `parsePlan` safety
     - File `plan.parse.property.test.ts`
     - **Property 5: parsePlan never throws and accepts only valid plans**
     - **Validates: Requirements 6.1, 6.2, 6.4, 6.5, 6.6, 6.7, 6.13**
 
-  - [ ] 2.5 Write property test for plan round trip
+  - [x] 2.5 Write property test for plan round trip
     - File `plan.roundtrip.property.test.ts`. Generate valid plans that the sanitizer leaves unchanged, and wrap in a fence with a language word, without one, and with surrounding whitespace
     - **Property 6: Plan round trip, with and without a code fence**
     - **Validates: Requirements 6.6, 6.8, 6.12**
 
-  - [ ] 2.6 Write property test for extra fields
+  - [x] 2.6 Write property test for extra fields
     - File `plan.extra-fields.property.test.ts`
     - **Property 7: Extra fields are discarded**
     - **Validates: Requirements 6.3**
 
-  - [ ] 2.7 Write property test for `sanitizePlanText`
+  - [x] 2.7 Write property test for `sanitizePlanText`
     - File `plan.sanitize.property.test.ts`
     - **Property 8: sanitizePlanText is total, idempotent and removes risky markup**
     - **Validates: Requirements 6.9, 6.10**
 
-- [ ] 3. Context gathering and capping
-  - [ ] 3.1 Implement `read-only.ts` and `github-schemas.ts`
+- [x] 3. Context gathering and capping
+  - [x] 3.1 Implement `read-only.ts` and `github-schemas.ts`
     - `read-only.ts`: export `ReadRoute`, `ReadRequester`, `isReadRoute(route)` (true only when the string starts with `"GET "`) and `readOnly(requester)` that throws `read-only requester` before calling the inner requester for any other route
     - `github-schemas.ts`: Zod schemas for README (raw text, max 2,000,000 chars), tree (`path`, `type`), commits (`commit.message`, `commit.committer.date` nullable), check runs, open issues (with optional `pull_request`), issue creation (`number`, `html_url`), and `RepoWithIssuesSchema = GitHubRepoSchema.extend({ has_issues: z.boolean() })`
     - Write `read-only.test.ts` (GET passes, POST/PATCH/DELETE throw, inner not called) and `github-schemas.test.ts` (valid and invalid payload per schema)
     - _Requirements: 1.8, 1.9, 2.4, 10.7_
 
-  - [ ] 3.2 Write property test for the read-only guard
+  - [x] 3.2 Write property test for the read-only guard
     - File `read-only.property.test.ts`
     - **Property 17: Read-only guard**
     - **Validates: Requirements 1.8, 1.9**
 
-  - [ ] 3.3 Implement `src/lib/resurrection/context.ts`
+  - [x] 3.3 Implement `src/lib/resurrection/context.ts`
     - Export `CONTEXT_FIELDS`, `ContextBundleSchema` (strict), `ContextBundle`, `RawContext`, `buildFileTree`, `buildCommitMessages`, `buildIssueTitles`, `deriveRepoHealth`, `capBundle`
     - Follow the design: top-level entries only with `/` suffix for directories and `compareCodePoint` sort, first line of commits, failing checks are `failure`, `timed_out`, `startup_failure`, each `null` raw field adds its bundle field to `unavailable`, `deriveRepoHealth` uses `toRepoHealth`, `deriveCiStatus`, `deriveOutdatedDeps`
     - End `capBundle` with the bounded loop that halves `readme` until `JSON.stringify(bundle).length <= CAP_SERIALIZED` and sets `readmeTruncated`
@@ -112,17 +112,17 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `context.test.ts`: README at 6,000 and 6,001 code points, every cap at and one above, unavailable mapping, empty repo, a bundle with `ci.state: "none"`, `description: null`
     - _Requirements: 2.3, 2.6, 2.11, 2.12, 3.6, 3.7, 3.8, 3.9, 3.10, 3.11, 3.12, 16.4_
 
-  - [ ] 3.4 Write property test for bundle caps
+  - [x] 3.4 Write property test for bundle caps
     - File `context.caps.property.test.ts`. Use a raw-context generator with arrays up to 200 and text biased toward quotes, backslashes and newlines
     - **Property 2: Capped bundle respects every cap**
     - **Validates: Requirements 2.11, 2.12, 3.6, 3.9, 3.11**
 
-  - [ ] 3.5 Write property test for list builders
+  - [x] 3.5 Write property test for list builders
     - File `context.lists.property.test.ts`
     - **Property 3: List builders keep order, shape and top level only**
     - **Validates: Requirements 3.7, 3.8, 3.10**
 
-  - [ ] 3.6 Implement `src/lib/resurrection/gather.ts`
+  - [x] 3.6 Implement `src/lib/resurrection/gather.ts`
     - Export `gatherContext(deps: { request: ReadRequester; now: Date }, owner, repo)`
     - Read metadata first and map failures with the `ScanFailureError` kinds (fatal). Then run six GET reads (README raw, tree, 10 commits, check runs, open issues, manifest date using the function verified in task 1.3) through `mapWithConcurrency(tasks, 5, run)`
     - Each task catches non-fatal failures (including Zod failures) and returns `null`; `rate_limited` and `token_revoked` rethrow. 404 README gives `""`; 404/409 tree gives `[]`; 409 commits gives `[]`; 404 checks gives `[]`; drop issues with `pull_request`
@@ -130,116 +130,116 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `gather.test.ts` with a fake requester: all six reads succeed, one read fails validation, one read times out (fake timers), 401 fatal, rate limit fatal, never more than 5 in flight, every route starts with `GET `, zero real network
     - _Requirements: 2.1, 2.2, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.13_
 
-- [ ] 4. Prompt builder and LLM adapter
-  - [ ] 4.1 Implement `src/lib/resurrection/prompt.ts`
+- [x] 4. Prompt builder and LLM adapter
+  - [x] 4.1 Implement `src/lib/resurrection/prompt.ts`
     - Export `SYSTEM_PROMPT` (constant, no interpolation, covers every item of Requirement 4.3 and the length guidance from the design), `USER_PREFIX`, `buildPrompt`, `extractDataBlock`
     - `buildPrompt` returns `{ system: SYSTEM_PROMPT, user: USER_PREFIX + JSON.stringify(bundle) }` and nothing else builds strings
     - Write `prompt.test.ts`: system text contains each required statement, the system string is identical for two bundles, a README with `"` `\` newlines and "ignore previous instructions" stays inside the parsed block, `extractDataBlock` round trip example
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
 
-  - [ ] 4.2 Write property test for prompt separation
+  - [x] 4.2 Write property test for prompt separation
     - File `prompt.property.test.ts`. Generate bundles with instruction-like phrases, quotes, backticks, braces, XML-like tags and delimiter imitations
     - **Property 4: Prompt separates instructions from data and round-trips**
     - **Validates: Requirements 4.1, 4.2, 4.4, 4.5, 4.6, 4.7**
 
-  - [ ] 4.3 Implement `src/lib/llm.ts`
+  - [x] 4.3 Implement `src/lib/llm.ts`
     - Export `LlmRequest` (exactly `system`, `user`, `maxOutputTokens`, `temperature`), `LlmClient`, `LlmFailureKind`, `LlmResult`, `callLlm(client, request, timeoutMs)`
     - Use an `AbortController`, a timer that sets `timedOut` and aborts, and a race with the abort so a client that ignores the signal cannot stall. Map reject to `unavailable` without keeping the error, non-string or blank text to `invalid_output`. Clear the timer in `finally`
     - No provider import, no `octokit` import, no tools field of any kind
     - Write `llm.test.ts`: success, timeout (fake timers, client never resolves and ignores signal), rejection with a secret in the error message (not present in the result), empty text, non-string text, request object has exactly the five fields
     - _Requirements: 4.8, 5.1, 5.2, 5.3, 5.4, 5.5, 5.8_
 
-  - [ ] 4.4 Implement `src/lib/llm-gemini.ts`
+  - [x] 4.4 Implement `src/lib/llm-gemini.ts`
     - Read the installed typings in `node_modules/@google/genai/dist/genai.d.ts` first and confirm `generateContent`, `systemInstruction`, `abortSignal`, `responseMimeType`, `httpOptions.retryOptions.attempts`
     - Export `buildGeminiConfig` (exactly `systemInstruction`, `maxOutputTokens`, `temperature`, `abortSignal`, `responseMimeType: "application/json"`; no tools, `toolConfig`, `thinkingConfig`) and `createGeminiClient({ apiKey, model })`
     - Import the SDK lazily inside `generate`, create `GoogleGenAI` once with `httpOptions: { retryOptions: { attempts: 1 } }`, return `{ text: res.text ?? "" }`. This is the only file that names the provider. The key goes only to the constructor
     - Write `llm-gemini.test.ts` with `vi.mock("@google/genai")`: config has exactly five keys, `attempts` is 1, lazy import happens on first `generate` only, no real request
     - _Requirements: 5.6, 5.9, 4.8_
 
-- [ ] 5. Fallback plan, retry and service
-  - [ ] 5.1 Implement `src/lib/resurrection/fallback.ts`
+- [x] 5. Fallback plan, retry and service
+  - [x] 5.1 Implement `src/lib/resurrection/fallback.ts`
     - Export `FallbackFacts`, `FALLBACK_TEMPLATES` (one per `CauseCode`, using the next-step and `effort` table in the design), `fallbackLabel`, `buildFallbackPlan`
     - `fallbackLabel`: `capText` to 60, keep `[A-Za-z0-9._ -]`, trim, collapse spaces, use `"this repo"` when empty or `containsBannedWord` (imported from `@/lib/epitaphs`, verified in task 1.2)
     - Write each template in the product tone: the repo is paused and can be revived, no banned word, no fact beyond `name`, `causeCode`, `status`, title within 100 code points, issue body a short paragraph plus a task list with no `<`, `@`, `![` or backtick
     - Write `fallback.test.ts`: loop over all six causes and four statuses (banned words, limits, forbidden characters, schema valid, six distinct plans), empty name, 100-code-point name, `@`/backtick/HTML names, a name equal to `quit`
     - _Requirements: 7.5, 7.6, 7.7, 7.8, 7.9_
 
-  - [ ] 5.2 Write property test for the fallback plan
+  - [x] 5.2 Write property test for the fallback plan
     - File `fallback.property.test.ts`
     - **Property 9: Fallback plan is valid, stable, deterministic and in tone**
     - **Validates: Requirements 7.5, 7.6, 7.7, 7.8**
 
-  - [ ] 5.3 Implement `src/lib/resurrection/attempts.ts`
+  - [x] 5.3 Implement `src/lib/resurrection/attempts.ts`
     - Export `runAttempts(call, maxAttempts)` and `toFallbackReason(kind)`
     - Loop at most `maxAttempts`, catch a rejected `call` as `unavailable`, run `parsePlan` on `ok` text and count failure as `invalid_output`, return at once on a valid plan, return the last kind after the final attempt. The same `call` closure is used for both attempts
     - Write `attempts.test.ts` for the six sequences of Requirement 16.5, and assert the two requests are identical and the first invalid output is absent from the second
     - _Requirements: 4.9, 7.1, 7.2, 7.3, 7.4, 16.5, 16.6_
 
-  - [ ] 5.4 Write property test for retry orchestration
+  - [x] 5.4 Write property test for retry orchestration
     - File `attempts.property.test.ts`. Sequences of two results from {valid, invalid, timeout, reject}
     - **Property 10: Retry orchestration**
     - **Validates: Requirements 4.9, 7.1, 7.2, 7.3, 7.4**
 
-  - [ ] 5.5 Implement `src/lib/resurrection/service.ts`
+  - [x] 5.5 Implement `src/lib/resurrection/service.ts`
     - Export `ResurrectOutcome` and `resurrect(deps, input)`: `gatherContext`, `deriveRepoHealth`, `scoreRepo(health, now)`, `capBundle`, `buildPrompt`; `makeLlmClient()` returning `null` gives `buildFallbackPlan` with `llm_not_configured` and zero LLM calls; otherwise `runAttempts(() => callLlm(...), 2)`
     - Build the `LlmRequest` once before the loop. Take no action on plan content. Log nothing
     - Write `service.test.ts` with a fake requester and fake `LlmClient`: AI plan, retry then AI, fallback after two failures with each reason, missing key (0 calls, response has no env var name), `ScanFailureError` propagates and the LLM is not called, injected README text is processed like any other README, zero non-GET requests
     - _Requirements: 2.3, 4.10, 4.11, 4.12, 5.7, 7.1, 7.2, 7.3, 7.4, 7.10, 15.7, 16.5, 16.9_
 
-- [ ] 6. Checkpoint - Ensure all tests pass
+- [x] 6. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 7. Rate limiting, request validation and safe errors
-  - [ ] 7.1 Implement `rate-limit.ts`, `inflight.ts` and `state.ts`
+- [x] 7. Rate limiting, request validation and safe errors
+  - [x] 7.1 Implement `rate-limit.ts`, `inflight.ts` and `state.ts`
     - `evaluateWindow`: normalize non-finite or future timestamps to `nowMs`, keep entries with `nowMs - t < windowMs`, sort, allow when `kept.length < limit` and append `nowMs`, otherwise deny with `max(1, ceil((oldest + windowMs - nowMs) / 1000))` and no append. Pure, no clock
     - `createRateLimitStore` over a `Map` as LRU with `maxKeys`; `createInFlightSet`; `getResurrectionState()` on `globalThis` under `Symbol.for("repo-graveyard.resurrection")` holding the resurrect, demo and issue stores and the in-flight set
     - Write `rate-limit.test.ts` at limit 10, window 600,000: 10th allowed, 11th denied with `retryAfterSeconds >= 1`, exactly 600,000 ms later allowed, denied not recorded, future timestamp, `NaN`, store eviction at `MAX_TRACKED_KEYS`, and `inflight.test.ts`, `state.test.ts`
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 8.9, 8.12, 8.13, 8.14, 16.7_
 
-  - [ ] 7.2 Write property test for the sliding window
+  - [x] 7.2 Write property test for the sliding window
     - File `rate-limit.window.property.test.ts`
     - **Property 11: Sliding window never exceeds the limit**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4**
 
-  - [ ] 7.3 Write property test for retry-after honesty
+  - [x] 7.3 Write property test for retry-after honesty
     - File `rate-limit.retry-after.property.test.ts`
     - **Property 12: Retry-after is honest and clock skew is tolerated**
     - **Validates: Requirements 8.3, 8.5**
 
-  - [ ] 7.4 Write property test for the bounded store
+  - [x] 7.4 Write property test for the bounded store
     - File `rate-limit.store.property.test.ts`
     - **Property 13: Rate limit store is bounded and keys are isolated**
     - **Validates: Requirements 8.8, 8.9**
 
-  - [ ] 7.5 Implement `src/lib/resurrection/request.ts`
+  - [x] 7.5 Implement `src/lib/resurrection/request.ts`
     - Export `ResurrectRequestSchema`, `IssueRequestSchema`, `isAllowedOrigin`, `isJsonContentType`, `readBodyLimited`. Import `boundedText` from `plan.ts`
     - Repo name regex `^[A-Za-z0-9._-]{1,100}$` and also reject `.` and `..`. `demo` must be a real boolean. Unknown keys are stripped
     - `readBodyLimited` counts bytes per chunk, cancels the reader past the limit, uses a fatal `TextDecoder`, does not trust `Content-Length`
     - Write `request.test.ts`: `owner`/`username`/`labels` stripped, `demo: "true"` rejected, `.` and `..` rejected, origin absent allowed, `"null"` rejected, content type with `; charset`, body at and above 20,000 bytes, invalid UTF-8
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 10.1, 10.2, 10.3_
 
-  - [ ] 7.6 Write property test for request schemas
+  - [x] 7.6 Write property test for request schemas
     - File `request.schema.property.test.ts`
     - **Property 14: Request schemas ignore unknown fields and reject bad names**
     - **Validates: Requirements 1.1, 1.2, 10.1**
 
-  - [ ] 7.7 Write property test for the origin check
+  - [x] 7.7 Write property test for the origin check
     - File `request.origin.property.test.ts`
     - **Property 15: Origin check**
     - **Validates: Requirements 1.4, 10.3**
 
-  - [ ] 7.8 Write property test for body size limiting
+  - [x] 7.8 Write property test for body size limiting
     - File `request.body.property.test.ts`. Generate text and arbitrary chunk splits of its UTF-8 bytes
     - **Property 16: Body size limit does not depend on chunking**
     - **Validates: Requirements 1.3, 10.2**
 
-  - [ ] 7.9 Implement `errors.ts` and `response.ts`
+  - [x] 7.9 Implement `errors.ts` and `response.ts`
     - `errors.ts`: `RESURRECTION_ERROR_TABLE` (messages reused from auth-ingestion are imported from its table, not copied), `ISSUE_CREATE_UNAVAILABLE_MESSAGE`, `ResurrectionErrorSchema`, `toSafeError` (accepts a custom message only from that constant; sets `Retry-After` for the two rate-limit codes), `RouteFailure`, `mapGitHubFailure` using `classifyGitHubFailure` and the mapping table in the design (user, demo and issue-create columns)
     - `response.ts` (client-safe): `FallbackReasonSchema`, `ResurrectSuccessSchema` (refine: `fallbackReason` present exactly when `source` is `fallback`), `IssueSuccessSchema`
     - Write `errors.test.ts` (every table row, every message at most 140 characters, token-revoked clears session, demo 401 gives `demo_unavailable`) and `response.test.ts`
     - _Requirements: 1.11, 2.7, 2.8, 2.9, 2.10, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 11.1, 11.2, 11.3, 11.6, 11.7, 11.8_
 
-  - [ ] 7.10 Write property test for safe errors
+  - [x] 7.10 Write property test for safe errors
     - File `errors.property.test.ts`. Generate thrown values with marker strings in `message`, `stack`, `response` and headers
     - **Property 18: Safe errors never carry upstream text**
     - **Validates: Requirements 2.7, 2.8, 2.9, 2.10, 9.7, 9.8, 11.8, 15.6**
@@ -271,12 +271,12 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write unit tests for each: `readFakeConfig` null in production and when unset, requester records no token, LLM step selection and last step repeats
     - _Requirements: 18.1, 18.2_
 
-  - [ ] 9.2 Implement `src/lib/resurrection/config.ts`
+  - [x] 9.2 Implement `src/lib/resurrection/config.ts`
     - Export `ResurrectionConfig` and `readResurrectionConfig(env)`: `llmApiKey` (null when missing or blank), `llmModel` (`LLM_MODEL` validated against `^[A-Za-z0-9._-]{1,64}$`, else `DEFAULT_LLM_MODEL`), `llmTimeoutMs`, `demoLimit`, `appOrigins` from `NEXTAUTH_URL`. Fake-config overrides apply only when `readFakeConfig` is non-null
     - Write `config.test.ts`: missing and blank key, bad model id falls back, override ignored without `E2E_FAKES`, key never appears in `JSON.stringify` of anything except the config object itself
     - _Requirements: 5.6, 5.7, 18.2_
 
-  - [ ] 9.3 Implement `src/lib/resurrection/handle-resurrect.ts`
+  - [x] 9.3 Implement `src/lib/resurrection/handle-resurrect.ts`
     - Export `ResurrectDeps` and `handleResurrect(deps, req)` in the design's order: request id and single `now`, origin, content type, size, JSON, schema, actor (demo uses `readDemoConfig` and never reads the session; user uses `readUserToken`), in-flight acquire (409), rate limiter (429 with `Retry-After`), `readOnly(makeRequester(token))`, `resurrect`, validate with `ResurrectSuccessSchema`, return 200. Release in `finally`
     - Errors only through `toSafeError`; `ScanFailureError` through `mapGitHubFailure`; `clearSession` appends clearing cookies; `log` receives `{ code, requestId }` only. In-flight key: login (user) or `demo:<repo lowercased>` (demo)
     - Write `handle-resurrect.test.ts` with a fake requester, fake session and fake LLM covering Requirement 16.8 for this route: unauthenticated, bad origin, invalid body, rate limited, busy, token revoked on read, GitHub rate limit, GitHub 403, repo not found, GitHub unavailable, demo not configured, demo 401. Each asserts status, code, and that the body holds no token or fake secret. Assert zero non-GET requests in every test and zero GitHub/LLM calls when rejected early
@@ -288,7 +288,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `handle-issue.test.ts` covering the issue cases of Requirement 16.8: unauthenticated, bad origin, invalid body, demo mode, rate limited, token revoked, GitHub rate limit, 403, repo not found, not owner, archived, issues disabled, 410, 422, timeout, invalid response. Assert exactly one POST with only `title` and `body` on success and zero issue POSTs in every rejected case
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7, 10.8, 10.9, 10.10, 10.11, 10.12, 10.13, 10.14, 10.15, 10.16, 10.17, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 16.8, 16.10_
 
-  - [ ] 9.5 Implement `src/lib/resurrection/deps.ts`
+  - [x] 9.5 Implement `src/lib/resurrection/deps.ts`
     - Export `createResurrectionDeps(env)`: real mode uses `createOctokitRequester`, `readUserToken`, `createGeminiClient` only when `llmApiKey` is set, `getResurrectionState()`, `crypto.randomUUID`, and a `log` that writes only `{ code, requestId }`. Fake mode (when `readFakeConfig(env)` is non-null) swaps only `makeRequester` and `makeLlmClient`
     - Write `deps.test.ts`: fakes selected only with `E2E_FAKES=1`, ignored with `VERCEL_ENV=production`, no `makeLlmClient` result when the key is missing, `log` drops any extra fields
     - _Requirements: 5.6, 5.7, 15.9, 18.2_
@@ -299,7 +299,7 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - Write `route.test.ts` for each route asserting the module exports exactly `POST` and `maxDuration` and no `GET`
     - _Requirements: 1.1, 10.1, 15.10_
 
-- [ ] 10. Checkpoint - Ensure all tests pass
+- [x] 10. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Client logic
@@ -377,14 +377,14 @@ The four assumptions flagged in the design are verified in tasks 1.2, 1.3, 1.4 a
     - File `src/components/graveyard/resurrect-a11y.test.tsx`: every control has a 44 px minimum class, visible focus ring class, status/effort/source each have a text label next to the icon, no hex, rgb or hsl string in the component sources (read source with `fs` and regex), every error is inside `role="alert"`, no error code or token-like string appears in rendered output
     - _Requirements: 12.15, 12.16, 13.9, 13.10, 14.15, 15.2, 15.5_
 
-- [ ] 13. Build guards and flagged-assumption verification
-  - [ ] 13.1 Add lint and bundle-leak guards
+- [x] 13. Build guards and flagged-assumption verification
+  - [x] 13.1 Add lint and bundle-leak guards
     - In `eslint.config.mjs` add `no-restricted-imports` for `src/components` and `src/lib/graveyard`: forbid `octokit`, `@google/genai`, `next-auth/jwt`, `@/lib/llm`, `@/lib/llm-gemini`, `@/lib/e2e/*`, and every `@/lib/resurrection/*` module except `plan`, `response`, `copy`, `limits`, `errors`. Keep `react/no-danger` as error
     - Extend the existing post-build grep of `.next/static` (from graveyard-ui) with `@google/genai`, `GoogleGenAI`, `generativelanguage.googleapis.com`, `LLM_API_KEY`, `E2E_FAKES`, `ghu_FAKE`, and `src/lib/llm`
     - Run `npm run lint` and `npm run typecheck` and fix findings in this spec's files only
     - _Requirements: 5.8, 15.8, 18.17_
 
-  - [ ] 13.2 Verify `serverExternalPackages` for `@google/genai` and the route segment config
+  - [x] 13.2 Verify `serverExternalPackages` for `@google/genai` and the route segment config
     - Read the `serverExternalPackages` and `maxDuration` docs under `node_modules/next/dist/docs/`
     - Run `npm run build`. If the output warns about bundling `@google/genai` (or its `ws` / `google-auth-library` dependencies), add `serverExternalPackages: ["@google/genai"]` to `next.config.ts` and rebuild until clean. If there is no warning, leave `next.config.ts` unchanged and note the result in the task completion message
     - Confirm the build accepts `maxDuration` on both routes with `cacheComponents: true`. If it does not, report it and use the alternative the Next docs describe

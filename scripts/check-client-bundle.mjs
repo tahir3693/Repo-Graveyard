@@ -9,6 +9,12 @@ const FORBIDDEN = [
   "AUTH_SECRET",
   "GITHUB_DEMO_TOKEN",
   "LLM_API_KEY",
+  "@google/genai",
+  "GoogleGenAI",
+  "generativelanguage.googleapis.com",
+  "E2E_FAKES",
+  "ghu_FAKE",
+  "src/lib/llm",
 ];
 
 function* walk(dir) {
