@@ -11,5 +11,7 @@ export default defineConfig({
     exclude: ["node_modules/**", "e2e/**", ".next/**"],
     // `vitest run` exits 0 when no test files exist yet.
     passWithNoTests: true,
+    // Blocks real network access (fetch, http, https) in every test file.
+    setupFiles: ["src/test/setup.ts"],
   },
 });

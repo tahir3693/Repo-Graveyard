@@ -18,12 +18,12 @@ Status: **built** works today, **specified** has a full spec but no code yet.
 - **Graveyard scene** (built): a moon and sky whose brightness follows how many repos are alive, three drifting fog layers, and subtle pointer parallax. Pure SVG and CSS.
 - **Resurrection animation** (built): fog parts around the stone, the stone glows, then the revival plan fades in. It includes loading and error states and finishes in 1.4 seconds after the plan arrives.
 - **Design system** (built): dark palette, Cinzel and Inter fonts, spacing, radius and motion tokens as CSS variables. Reduced motion is respected everywhere.
-- **Sign in with GitHub** (specified): Auth.js with the narrowest scope that works, `public_repo`.
-- **Scan** (specified): `POST /api/scan` reads your repos with Octokit on the server, handles pagination and rate limits, skips forks by default, and validates every response with Zod.
+- **Sign in with GitHub** (built): Auth.js route with the `public_repo` scope; the GitHub token stays in the server-side session.
+- **Scan** (built): `POST /api/scan` reads up to 300 repos on the server, skips forks by default, validates every GitHub response with Zod and returns typed errors.
 - **Death score** (built): `scoreRepo` gives a 0 to 100 score, a status, a cause of death, an epitaph and scene values from fixed rules; only the status and cause rules are tested so far. No AI in scoring.
-- **Graveyard page** (specified): summary counts, filters, sorting, a plain list view and a detail drawer.
+- **Graveyard page** (in progress): one tombstone per repo and an accessible detail drawer are built; summary, filters, sorting and the list view are not.
 - **Resurrect and File this issue** (specified): `POST /api/resurrect` builds a revival plan, and `POST /api/issue` files it only for the repo's owner and never in demo mode.
-- **Demo mode** (specified): try the graveyard on a fixed public account with no login.
+- **Demo mode** (in progress): `/graveyard?demo=1` scans a fixed public account with no login; Resurrect needs the unbuilt `/api/resurrect` route.
 
 Every spooky element carries data. Fog thickness is days of inactivity, a lit candle is recent activity, cracks are failing CI, vines are outdated dependencies, and a bigger stone is more stars.
 

@@ -27,6 +27,45 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Octokit is only imported inside src/lib/github/ (the requester). This block comes
+  // before the later no-restricted-imports blocks (client guard, scoring), which replace
+  // it for their files and repeat the octokit bans themselves.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/github/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "octokit",
+              message: "Only src/lib/github/ may import octokit.",
+            },
+          ],
+          patterns: [
+            {
+              group: ["@octokit/*"],
+              message: "Only src/lib/github/ may import @octokit/*.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // GitHub ingestion code validates external data with Zod, so no type assertions and no
+  // non-null assertions. Tests may cast fixtures. `as const` is always allowed.
+  {
+    files: ["src/lib/github/**/*.ts"],
+    ignores: ["**/*.test.ts", "**/test-utils/**"],
+    rules: {
+      "@typescript-eslint/consistent-type-assertions": [
+        "error",
+        { assertionStyle: "never" },
+      ],
+      "@typescript-eslint/no-non-null-assertion": "error",
+    },
+  },
   // Security: client code must never import server-only modules or read the environment.
   // Tokens and API keys (GITHUB_SECRET, AUTH_SECRET, LLM_API_KEY, GITHUB_DEMO_TOKEN, user
   // access tokens) stay on the server. See .kiro/steering/tech.md ("Server and secrets").
