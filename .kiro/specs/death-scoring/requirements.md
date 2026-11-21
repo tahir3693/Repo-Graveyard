@@ -18,6 +18,7 @@ Out of scope: fetching data, the graveyard UI, AI epitaph polish, revival plans 
 6. **Extra output field.** The `Tombstone` includes `daysInactive` (integer or null), which you did not list. The design system requires text such as "Inactive 412 days" for every visual element, and the UI must not recompute it.
 7. **No commits.** A repo with no valid last-commit date is treated as maximally inactive (365 days for scoring), the same as a repo untouched for a year or more.
 8. **Cause shape.** The cause of death is an object with a stable `code` and a display `label`, so the UI and tests can match on the code.
+9. **Status first, seventh cause.** Status is computed from the score before the cause is chosen, and the cause is chosen from the status. Status `alive` can only produce the living cause `still_active`. Status `dying`, `dead` or `ancient` can only produce a death cause and never `still_active`. A seventh cause, `fading_health` (label "Health fading"), is the last-resort death cause for a non-alive repo that matches no earlier death rule. This removes two contradictions: a repo with 29 days of inactivity, failing CI, outdated dependencies and no README scores 28 (`dying`) and is now `fading_health` instead of "Still active", and a repo with 3 open issues and 90 days of inactivity scores 23 (`alive`) and is now `still_active` instead of "Died with open issues". The day gates and labels of the existing causes are unchanged.
 
 ## Glossary
 
@@ -27,7 +28,9 @@ Out of scope: fetching data, the graveyard UI, AI epitaph polish, revival plans 
 - **Tombstone**: The result object returned by the Scoring_Engine with these fields: `score`, `status`, `cause`, `epitaph`, `daysInactive`, and `scene`.
 - **Death_Score**: An integer from 0 to 100. Higher means more abandoned.
 - **Status**: One of `alive`, `dying`, `dead` or `ancient`.
-- **Cause_Code**: One of `archived`, `abandoned_failing_ci`, `died_with_issues`, `outdated_and_forgotten`, `quietly_retired` or `still_active`.
+- **Cause_Code**: One of `archived`, `abandoned_failing_ci`, `died_with_issues`, `outdated_and_forgotten`, `quietly_retired`, `fading_health` or `still_active`.
+- **Death_Cause**: Every Cause_Code except `still_active`.
+- **Living_Cause**: The Cause_Code `still_active`.
 - **Cause**: An object `{ code, label }` where `code` is a Cause_Code and `label` is a non-empty human-readable string.
 - **Epitaph**: A one-line string of 80 characters or fewer, built from a template and facts about the repo.
 - **Scene**: The object `{ fog, candle, cracks, vines }` where `fog` is a number from 0 to 1 and the other three are booleans.
@@ -127,7 +130,7 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 
 1. IF the `archived` field of a repository is true, THEN THE Scoring_Engine SHALL set `status` to `ancient`, regardless of the computed Death_Score, days of inactivity, CI state or issue state.
 2. IF the `archived` field of a repository is true, THEN THE Scoring_Engine SHALL set the Death_Score to the integer maximum of the computed score and `ARCHIVED_MIN_SCORE`, so that the Death_Score is from 90 to 100 inclusive.
-3. IF the `archived` field of a repository is true, THEN THE Scoring_Engine SHALL set the Cause_Code to `archived`, taking precedence over every other Cause_Code, including when other cause rules also match.
+3. IF the `archived` field of a repository is true, THEN THE Scoring_Engine SHALL set the Cause_Code to `archived`, taking precedence over every other Cause_Code, including when other cause rules also match, because the status of an archived repo is always `ancient` and the cause is chosen from the status.
 4. IF the `archived` field of a repository is true, THEN THE Scoring_Engine SHALL set `scene.candle` to false, regardless of the date of the most recent activity.
 5. IF the `archived` field of a repository is false, THEN THE Scoring_Engine SHALL compute `status`, Death_Score, Cause_Code and `scene.candle` using the standard scoring rules, without applying `ARCHIVED_MIN_SCORE`.
 
@@ -137,19 +140,24 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 
 #### Acceptance Criteria
 
-1. THE Scoring_Engine SHALL select the Cause by evaluating the ordered rule list below from item 1 to item 6, and the first rule whose condition is true SHALL win. Evaluation SHALL stop at the first match.
+1. THE Scoring_Engine SHALL compute the Status from the Death_Score first and SHALL select the Cause from that Status, as follows. WHEN the Status is `alive`, THE Scoring_Engine SHALL select the Cause `still_active` (rule 7) without evaluating rules 1 to 6. WHEN the Status is `dying`, `dead` or `ancient`, THE Scoring_Engine SHALL evaluate the death rules below from item 1 to item 6 in that priority order, and the first rule whose condition is true SHALL win. Evaluation SHALL stop at the first match.
    1. `archived`: `archived` is true. Label: "Archived and laid to rest".
    2. `abandoned_failing_ci`: Effective_Days is at least `STALE_AFTER_DAYS` and `ciStatus` is `failing`. Label: "Abandoned with failing CI".
    3. `died_with_issues`: Stale_Issues is at least `DYING_CAUSE_ISSUES_MIN`. Label: "Died with open issues".
    4. `outdated_and_forgotten`: Effective_Days is at least `STALE_AFTER_DAYS` and `outdatedDeps` is true. Label: "Outdated and forgotten".
    5. `quietly_retired`: Effective_Days is at least `STALE_AFTER_DAYS`. Label: "Quietly retired".
-   6. `still_active`: no earlier rule matched. Label: "Still active".
-2. THE Scoring_Engine SHALL return exactly one Cause for each RepoHealth, and for identical RepoHealth and current-time inputs SHALL return an identical Cause on every call.
-3. THE Scoring_Engine SHALL return a Cause whose `label` is a string of 1 to 80 characters that equals the label listed for the matched rule in criterion 1.
+   6. `fading_health`: no earlier death rule matched. Label: "Health fading".
+   7. `still_active`: the Status is `alive`. Label: "Still active".
+2. THE Scoring_Engine SHALL expose a function `selectCause` that accepts the RepoHealth, the Status and Effective_Days inputs it needs, SHALL return exactly one Cause for each RepoHealth, and for identical inputs SHALL return an identical Cause on every call.
+3. THE Scoring_Engine SHALL return a Cause whose `label` is a string of 1 to 80 characters that equals the label listed for the matched rule in criterion 1, including "Health fading" for `fading_health`.
 4. WHEN the Cause is `died_with_issues`, THE Scoring_Engine SHALL include the Stale_Issues count as a decimal integer in the Tombstone epitaph and SHALL return the Cause `label` as "Died with open issues" with no count in it.
-5. THE Scoring_Engine SHALL define the rule list as an ordered array of data exported for tests, containing exactly 6 entries in the order given in criterion 1, so that the order is visible in one place and testable.
+5. THE Scoring_Engine SHALL define the rule list as an ordered array of data exported for tests, containing exactly 7 entries in this order: `archived`, `abandoned_failing_ci`, `died_with_issues`, `outdated_and_forgotten`, `quietly_retired`, `fading_health`, `still_active`, so that the order is visible in one place and testable.
 6. IF Days_Inactive is null, THEN THE Scoring_Engine SHALL use an Effective_Days of 365 when evaluating every rule in criterion 1, and SHALL still return exactly one Cause.
-7. IF `archived` is false AND Effective_Days is less than `STALE_AFTER_DAYS`, THEN THE Scoring_Engine SHALL return the Cause `still_active`.
+7. IF the Status is `alive`, THEN THE Scoring_Engine SHALL return the Cause `still_active`, which is a Living_Cause and not a Death_Cause.
+8. IF the Status is `dying`, `dead` or `ancient`, THEN THE Scoring_Engine SHALL return a Death_Cause and SHALL NOT return the Cause `still_active`.
+9. WHEN a repo has 29 days of inactivity, `ciStatus` `failing`, `outdatedDeps` true, `hasReadme` false and `archived` false, THE Scoring_Engine SHALL return the Death_Score 28, the Status `dying` and the Cause `fading_health`.
+10. WHEN a repo has 90 days of inactivity, 3 open issues, `ciStatus` `passing`, `outdatedDeps` false, `hasReadme` true and `archived` false, THE Scoring_Engine SHALL return the Death_Score 23, the Status `alive` and the Cause `still_active`.
+11. WHEN a repo matches several death rules, THE Scoring_Engine SHALL return the Cause of the match that comes first in the order of criterion 1, so that `archived` wins over `abandoned_failing_ci`, and `abandoned_failing_ci` wins over every later death rule.
 
 ### Requirement 7: Scene values
 
@@ -176,7 +184,7 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 
 #### Acceptance Criteria
 
-1. THE Epitaph_Generator SHALL hold at least 3 templates for each of the 6 Cause_Code values (archived, abandoned_failing_ci, died_with_issues, outdated_and_forgotten, quietly_retired, still_active).
+1. THE Epitaph_Generator SHALL hold at least 3 templates for each of the 7 Cause_Code values (archived, abandoned_failing_ci, died_with_issues, outdated_and_forgotten, quietly_retired, fading_health, still_active).
 2. THE Epitaph_Generator SHALL select the template for a repo by computing a 32-bit FNV-1a hash of the repo `name` and taking the hash modulo the number of templates for the Cause_Code.
 3. WHEN the Epitaph_Generator is called twice with the same `name`, the same Cause_Code and the same facts, THE Epitaph_Generator SHALL return the same Epitaph.
 4. WHEN a selected template contains a placeholder for the repo `name`, Days_Inactive, the Stale_Issues count or `stars`, THE Epitaph_Generator SHALL replace each placeholder with the matching value as a base-10 integer (for numbers) or the unmodified `name` (for the name), leaving no unreplaced placeholder in the Epitaph.
@@ -184,7 +192,7 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 6. THE Epitaph_Generator SHALL return an Epitaph of 1 to 80 characters.
 7. IF the filled template is longer than 80 characters, THEN THE Epitaph_Generator SHALL truncate only the repo `name` portion, end it with the single character "…", and remove as few characters as needed so that the Epitaph is 80 characters or fewer.
 8. IF the repo `name` is an empty string, THEN THE Epitaph_Generator SHALL use the text "this repo" in place of the name and SHALL NOT throw.
-9. THE Epitaph_Generator SHALL return a non-empty Epitaph for every one of the 6 Cause_Code values and every valid RepoHealth, including a `name` of up to 100 characters and `stars`, Days_Inactive and Stale_Issues values of up to 999,999,999.
+9. THE Epitaph_Generator SHALL return a non-empty Epitaph for every one of the 7 Cause_Code values and every valid RepoHealth, including a `name` of up to 100 characters and `stars`, Days_Inactive and Stale_Issues values of up to 999,999,999.
 10. THE Epitaph_Generator SHALL use no randomness, no clock read and no AI to select or fill a template.
 11. THE Epitaph_Generator SHALL export the template table, so that tests can check every template.
 12. THE Epitaph_Generator SHALL write every template so that its fixed text, excluding the name placeholder, is 50 characters or fewer, so that name truncation in criterion 7 always produces an Epitaph of 80 characters or fewer.
@@ -241,8 +249,8 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 
 1. THE Scoring_Engine SHALL include Vitest unit tests, in `*.test.ts` files located next to the code under test, that cover each exported function in `src/lib/scoring.ts` and `src/lib/epitaphs.ts` with at least one success case and at least one failure or boundary case.
 2. THE unit tests SHALL assert that a death score of 0 or 24 maps to `alive`, 25 or 59 maps to `dying`, 60 or 89 maps to `dead`, and 90 or 100 maps to `ancient`.
-3. THE unit tests SHALL include, for each Cause_Code, at least one RepoHealth example whose computed cause of death equals that Cause_Code.
-4. THE unit tests SHALL include at least one RepoHealth example that matches three or more cause rules and SHALL assert that the returned cause of death is the one defined first in the rule order.
+3. THE unit tests SHALL include, for each of the 7 Cause_Code values, at least one RepoHealth example whose computed cause of death equals that Cause_Code.
+4. THE unit tests SHALL include at least one RepoHealth example that matches three or more death rules and SHALL assert that the returned cause of death is the one defined first in the rule order, including an example that returns `archived` and an example that returns `abandoned_failing_ci` when later death rules also match.
 5. THE unit tests SHALL assert the fog step for inactivity of 29, 30, 119, 120, 299 and 300 days, with each value mapped to the step defined in the scoring rules, so that each step boundary is checked on both sides.
 6. THE unit tests SHALL assert that the candle is lit at 30 days of inactivity and unlit at 31 days.
 7. THE unit tests SHALL assert, for a `lastCommitAt` date later than `now`, the same candle, fog and status results that the scoring rules define for that case.
@@ -250,6 +258,7 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 9. THE unit tests SHALL generate an epitaph from every epitaph template using a repo name of exactly 100 characters, and SHALL assert that each result is at most 80 characters long, as required by Requirement 9 and Requirement 8.6.
 10. THE unit tests SHALL pass a fixed `now` value to every call that takes a time input and SHALL NOT read the system clock.
 11. WHEN `npm run test` is run, THE unit tests SHALL finish with all tests passing and exit code 0 on an unmodified checkout.
+12. THE unit tests SHALL include the two status and cause contradiction examples of Requirement 6, and SHALL assert that the example with 29 days of inactivity, failing CI, outdated dependencies and no README returns the Death_Score 28, the Status `dying` and the Cause `fading_health`, and that the example with 90 days of inactivity and 3 open issues returns the Death_Score 23, the Status `alive` and the Cause `still_active`.
 
 ### Requirement 13: Property-based tests
 
@@ -271,3 +280,5 @@ The maximum total of the point sources is 70 + 12 + 8 + 6 + 4 = 100.
 12. FOR ALL repo names (including the empty string and strings up to 200 characters) and all Cause_Codes, THE property tests SHALL check that two calls to the Epitaph_Generator with the same input return identical Epitaph strings.
 13. FOR ALL valid RepoHealth objects, THE property tests SHALL check that changing only `stars`, `language`, `url` or `description` leaves `score`, `status` and `cause` unchanged.
 14. THE property tests SHALL pass `now` as an argument to every `scoreRepo` call and SHALL NOT read the system clock, so that a failing case reproduces from the fast-check seed reported on failure.
+15. FOR ALL valid RepoHealth objects and valid `now` values, THE property tests SHALL check that a `status` of `alive` implies a `cause.code` of `still_active` (a Living_Cause and not a Death_Cause).
+16. FOR ALL valid RepoHealth objects and valid `now` values, THE property tests SHALL check that a `status` other than `alive` implies a `cause.code` that is not `still_active`, and the generators for criteria 15 and 16 SHALL produce inputs that reach `alive` and each of `dying`, `dead` and `ancient`.

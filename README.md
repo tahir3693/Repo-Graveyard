@@ -20,7 +20,7 @@ Status: **built** works today, **specified** has a full spec but no code yet.
 - **Design system** (built): dark palette, Cinzel and Inter fonts, spacing, radius and motion tokens as CSS variables. Reduced motion is respected everywhere.
 - **Sign in with GitHub** (specified): Auth.js with the narrowest scope that works, `public_repo`.
 - **Scan** (specified): `POST /api/scan` reads your repos with Octokit on the server, handles pagination and rate limits, skips forks by default, and validates every response with Zod.
-- **Death score** (specified): a deterministic 0 to 100 score, a status (alive, dying, dead, ancient), a cause of death and an epitaph, from fixed rules. No AI in scoring.
+- **Death score** (built): `scoreRepo` gives a 0 to 100 score, a status, a cause of death, an epitaph and scene values from fixed rules; only the status and cause rules are tested so far. No AI in scoring.
 - **Graveyard page** (specified): summary counts, filters, sorting, a plain list view and a detail drawer.
 - **Resurrect and File this issue** (specified): `POST /api/resurrect` builds a revival plan, and `POST /api/issue` files it only for the repo's owner and never in demo mode.
 - **Demo mode** (specified): try the graveyard on a fixed public account with no login.

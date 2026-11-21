@@ -1,69 +1,80 @@
-import Image from "next/image";
+import { GraveyardScene } from "@/components/GraveyardScene";
+import { SignInButton } from "@/components/SignInButton";
+import { SkipLink } from "@/components/SkipLink";
+import { Tombstone } from "@/components/Tombstone";
+import "./landing.css";
+
+const STEPS = [
+  "Scan your repos",
+  "See which ones died and why",
+  "Get a revival plan",
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <SkipLink targetId="main" />
+      <div className="landing">
+        {/* Decorative sample stones. inert keeps their buttons out of the tab order. */}
+        <div className="landing-bg" aria-hidden="true" inert>
+          <GraveyardScene alive={2} total={6}>
+            <div className="landing-stones">
+              <Tombstone
+                name="todo-app"
+                cause="Quietly retired"
+                epitaph="Here lies todo-app. Last words: // TODO: finish this."
+                status="dead"
+                candle={false}
+              />
+              <Tombstone
+                name="weather-cli"
+                cause="Abandoned with failing CI"
+                epitaph="Its tests are red, but its ideas are still alive."
+                status="dying"
+                candle={false}
+              />
+              <Tombstone
+                name="portfolio-v2"
+                cause="Still active"
+                epitaph="It compiled once. We will always remember that."
+                status="alive"
+                candle
+              />
+            </div>
+          </GraveyardScene>
+        </div>
+        <main id="main" tabIndex={-1} className="landing-main">
+          <h1 className="landing-title">Repo Graveyard</h1>
+          <p className="landing-tagline">
+            Find your dead repos and get a plan to revive them.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          <div className="landing-actions">
+            <SignInButton />
+            {/* A GET form submits to /graveyard?demo=1 with no client JavaScript. */}
+            <form action="/graveyard" method="get" className="landing-demo-form">
+              <input type="hidden" name="demo" value="1" />
+              <button type="submit" className="landing-action landing-action-secondary">
+                Try demo graveyard
+              </button>
+            </form>
+          </div>
+          <section aria-labelledby="how-it-works" className="landing-how">
+            <h2 id="how-it-works" className="landing-how-title">
+              How it works
+            </h2>
+            <ol className="landing-steps">
+              {STEPS.map((step) => (
+                <li key={step} className="landing-step">
+                  {step}
+                </li>
+              ))}
+            </ol>
+          </section>
+        </main>
+        <footer className="landing-footer">
+          <p>Built with Kiro for Kiroween 2026</p>
+        </footer>
+      </div>
+    </>
   );
 }

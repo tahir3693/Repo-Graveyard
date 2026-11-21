@@ -1,0 +1,158 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Confirm test tooling and path alias": [
+      {
+        "executionId": "7afff69a-d0b6-46ac-949a-4c7b6164f07c",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231584984
+      },
+      {
+        "executionId": "7afff69a-d0b6-46ac-949a-4c7b6164f07c",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231669164
+      }
+    ],
+    "1.2 Implement `src/lib/epitaphs.ts`": [
+      {
+        "executionId": "92a9feef-0460-49c6-8d7c-5864bb9c5b63",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231770319
+      },
+      {
+        "executionId": "92a9feef-0460-49c6-8d7c-5864bb9c5b63",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231900613
+      }
+    ],
+    "1. Test tooling and epitaph module": [
+      {
+        "executionId": "92a9feef-0460-49c6-8d7c-5864bb9c5b63",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231900838
+      }
+    ],
+    "2. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "e9225d67-bd04-44ab-8506-fa1561ebaa94",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795231954745
+      },
+      {
+        "executionId": "e9225d67-bd04-44ab-8506-fa1561ebaa94",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232012415
+      }
+    ],
+    "3.1 Create `src/lib/scoring.ts` foundations": [
+      {
+        "executionId": "956a1427-e4a4-405a-9c14-063119554f24",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232176717
+      },
+      {
+        "executionId": "956a1427-e4a4-405a-9c14-063119554f24",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232284602
+      }
+    ],
+    "3.2 Add score, status, cause and scene functions to `src/lib/scoring.ts`": [
+      {
+        "executionId": "0e4cdb05-89ce-4d96-89d5-35c1eaf6c7f4",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232393607
+      },
+      {
+        "executionId": "0e4cdb05-89ce-4d96-89d5-35c1eaf6c7f4",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232523681
+      }
+    ],
+    "3.3 Add `TombstoneSchema` and `scoreRepo` to `src/lib/scoring.ts`": [
+      {
+        "executionId": "22fe2dec-2ed9-4c97-a486-add710a710b6",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232560737
+      },
+      {
+        "executionId": "22fe2dec-2ed9-4c97-a486-add710a710b6",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232681924
+      }
+    ],
+    "3.4 Create shared arbitraries in `src/lib/test-utils/scoring-arbitraries.ts`": [
+      {
+        "executionId": "bf789035-0c89-41d7-931b-2b4e541df3cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232729186
+      },
+      {
+        "executionId": "bf789035-0c89-41d7-931b-2b4e541df3cb",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795232976297
+      }
+    ],
+    "3.20 Write property test for alive causes in `src/lib/scoring.alive-cause.property.test.ts`": [
+      {
+        "executionId": "1a87d04d-a5ca-4e81-befe-e4c69eda2b4e",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233022629
+      },
+      {
+        "executionId": "1a87d04d-a5ca-4e81-befe-e4c69eda2b4e",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233146368
+      }
+    ],
+    "3.21 Write property test for non-alive causes in `src/lib/scoring.death-cause.property.test.ts`": [
+      {
+        "executionId": "1840db0b-b052-4db0-95fd-85f033c07aa1",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233211235
+      },
+      {
+        "executionId": "1840db0b-b052-4db0-95fd-85f033c07aa1",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233325645
+      }
+    ],
+    "3. Scoring engine": [
+      {
+        "executionId": "1840db0b-b052-4db0-95fd-85f033c07aa1",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233325784
+      }
+    ],
+    "4.1 Add ESLint restrictions in `eslint.config.mjs`": [
+      {
+        "executionId": "7566c37d-b71e-4d10-9121-3efd8526d19d",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233382443
+      },
+      {
+        "executionId": "7566c37d-b71e-4d10-9121-3efd8526d19d",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233631001
+      }
+    ],
+    "4. Static checks": [
+      {
+        "executionId": "7566c37d-b71e-4d10-9121-3efd8526d19d",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233631440
+      }
+    ],
+    "5. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "b3e2362c-adcc-44c3-b656-df1e9c7d350f",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233837904
+      },
+      {
+        "executionId": "b3e2362c-adcc-44c3-b656-df1e9c7d350f",
+        "chatSessionId": "sess_b5697e37-0e57-4f5c-aefd-e2eedcef767f",
+        "timestamp": 1795233932450
+      }
+    ]
+  }
+}

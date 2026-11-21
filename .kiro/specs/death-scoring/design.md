@@ -22,7 +22,7 @@ Nothing here does I/O. There is no network, filesystem, clock read, randomness o
 | Stale issues | Open issues count only when effective days is at least 90 | `RepoHealth` has no issue age (assumption 2). |
 | Vines and cracks | Booleans | `RepoHealth` has no dependency or failing-check counts (assumptions 3 and 4). |
 | Fog | Derived from effective days only, in 4 steps | Archived but recently active repos are not wrapped in fog that misstates inactivity (assumption 5). |
-| Cause rules | An exported ordered array of `{ code, label, matches }` | Order is visible in one place and testable (requirement 6.5). |
+| Cause rules | An exported ordered array of 7 `{ code, label, kind, matches }` entries: six death rules in priority order, then the living rule. `selectCause(facts, status)` filters by `kind` from the status | Status is computed first, so status and cause cannot contradict. Order is visible in one place and testable (requirement 6.5). |
 | Epitaph selection | FNV-1a of the repo name, modulo the number of eligible templates | Deterministic, no randomness, stable across runs. |
 | `{days}` placeholder | Renders a duration phrase: `"412 days"`, `"1 day"` or `"a long time"` | Keeps sentences grammatical when days is null. The number inside the phrase is a base-10 integer. |
 | Epitaph facts clamp | Counts are clamped to 999,999,999 before rendering | Keeps the worst-case text width known, so truncating only the name always fits in 80 characters. |
@@ -45,9 +45,10 @@ flowchart LR
     Score --> Days[computeDaysInactive]
     Days --> Eff[effectiveDays]
     Eff --> Pts[computeScore]
-    Eff --> Cause[selectCause over CAUSE_RULES]
     Eff --> Scene[computeScene]
     Pts --> Status[statusFromScore]
+    Status --> Cause[selectCause facts, status over CAUSE_RULES]
+    Eff --> Cause
     Cause --> Epi[generateEpitaph]
     Epi --> Tomb[Tombstone]
     Status --> Tomb
@@ -65,7 +66,8 @@ sequenceDiagram
     participant E as epitaphs
     Caller->>S: repo, now
     S->>S: sanitizeFacts(repo, now)
-    S->>S: score, status, cause, scene
+    S->>S: score, then status = statusFromScore(score)
+    S->>S: cause = selectCause(facts, status), scene
     S->>E: generateEpitaph(name, causeCode, facts)
     E-->>S: epitaph (1..80 chars)
     S-->>Caller: Tombstone
@@ -153,8 +155,8 @@ All are named exports.
 | `inactivityPoints` | `(effectiveDays: number) => number` | `floor((2*70*d + 365) / (2*365))` with `d = min(effectiveDays, 365)`. |
 | `computeScore` | `(facts: Facts) => number` | Sum of the five point sources, capped at 100, then `max` with 90 when archived. |
 | `statusFromScore` | `(score: number) => Status` | First band in `STATUS_BANDS` whose `min` is at most `score`. Exported for the UI and tests (requirement 4.5). |
-| `CAUSE_RULES` | `ReadonlyArray<CauseRule>` | The six ordered rules. |
-| `selectCause` | `(facts: Facts) => Cause` | First rule whose `matches(facts)` is true. |
+| `CAUSE_RULES` | `ReadonlyArray<CauseRule>` | The 7 ordered rules: six death rules in priority order, then the living rule. Each rule has `kind: "death" \| "living"`. |
+| `selectCause` | `(facts: Facts, status: Status) => Cause` | Status comes first. For `alive`, returns the living rule (`still_active`). For `dying`, `dead` or `ancient`, returns the first death rule, in priority order, whose `matches(facts)` is true. `fading_health` always matches, so a death cause always exists. |
 | `fogForDays` | `(effectiveDays: number) => 0 \| 0.33 \| 0.66 \| 1` | First step in `FOG_STEPS` whose `minDays` is at most `effectiveDays`. |
 | `computeScene` | `(facts: Facts) => Scene` | See below. |
 | `buildFacts` | `(repo: RepoHealth, now: Date) => Facts` | The one place that sanitizes inputs. |
@@ -192,20 +194,46 @@ score      = archived ? max(base, 90) : base
 
 #### Cause rules
 
+Status is computed from the score first. The cause is then chosen from the status, so the two can never disagree.
+
 ```ts
-export type CauseRule = { code: CauseCode; label: string; matches: (facts: Facts) => boolean };
+export type CauseRule = {
+  code: CauseCode;
+  label: string;
+  kind: "death" | "living";
+  matches: (facts: Facts) => boolean;
+};
+// Death rules first, in FIXED PRIORITY ORDER (1 to 6), then the one living rule.
 export const CAUSE_RULES: ReadonlyArray<CauseRule> = [
-  { code: "archived",               label: "Archived and laid to rest",  matches: f => f.archived },
-  { code: "abandoned_failing_ci",   label: "Abandoned with failing CI",  matches: f => f.effectiveDays >= 90 && f.ciStatus === "failing" },
-  { code: "died_with_issues",       label: "Died with open issues",      matches: f => f.staleIssues >= 3 },
-  { code: "outdated_and_forgotten", label: "Outdated and forgotten",     matches: f => f.effectiveDays >= 90 && f.outdatedDeps === true },
-  { code: "quietly_retired",        label: "Quietly retired",            matches: f => f.effectiveDays >= 90 },
-  { code: "still_active",           label: "Still active",               matches: () => true },
+  { code: "archived",               kind: "death",  label: "Archived and laid to rest",  matches: f => f.archived },
+  { code: "abandoned_failing_ci",   kind: "death",  label: "Abandoned with failing CI",  matches: f => f.effectiveDays >= 90 && f.ciStatus === "failing" },
+  { code: "died_with_issues",       kind: "death",  label: "Died with open issues",      matches: f => f.staleIssues >= 3 },
+  { code: "outdated_and_forgotten", kind: "death",  label: "Outdated and forgotten",     matches: f => f.effectiveDays >= 90 && f.outdatedDeps === true },
+  { code: "quietly_retired",        kind: "death",  label: "Quietly retired",            matches: f => f.effectiveDays >= 90 },
+  { code: "fading_health",          kind: "death",  label: "Health fading",              matches: () => true },
+  { code: "still_active",           kind: "living", label: "Still active",               matches: () => true },
 ];
+
+export function selectCause(facts: Facts, status: Status): Cause {
+  const kind = status === "alive" ? "living" : "death";
+  const rule = CAUSE_RULES.find(r => r.kind === kind && r.matches(facts))!;   // last rule of each kind always matches
+  return { code: rule.code, label: rule.label };
+}
 ```
 
-The constants (`90`, `3`) are read from `SCORING_CONSTANTS` in code. `selectCause` uses `find`, which stops at the first match. The last rule always matches, so a cause always exists. A `null` `outdatedDeps` never equals `true`, so that rule is skipped for unknown dependencies (requirement 10.2). Stale issues already include the 90 day gate.
+Selection works in two steps:
 
+1. `status` is the input. `selectCause` filters `CAUSE_RULES` by `kind`: `alive` keeps only the living rule, and `dying`, `dead` and `ancient` keep only the six death rules.
+2. For a non-alive status, the death rules are tried in this priority order and the first match wins: 1 `archived`, 2 `abandoned_failing_ci`, 3 `died_with_issues`, 4 `outdated_and_forgotten`, 5 `quietly_retired`, 6 `fading_health`. `fading_health` always matches, so a death cause always exists and `still_active` is unreachable for a non-alive status. An archived repo always has score 90 or more, so it is always `ancient` and never `alive`.
+
+The constants (`90`, `3`) are read from `SCORING_CONSTANTS` in code. `find` stops at the first match. A `null` `outdatedDeps` never equals `true`, so rule 4 is skipped for unknown dependencies (requirement 10.2). Stale issues already include the 90 day gate.
+
+Worked contradiction cases (requirements 6.9 and 6.10), checked against the score formula:
+
+- (a) 29 days inactive, failing CI, outdated dependencies, no README, not archived: inactivity `floor((2*70*29 + 365) / 730) = floor(4425 / 730) = 6`, CI 12, issues 0 (29 is below 90), deps 6, README 4. Score 28, status `dying`, cause `fading_health` ("Health fading"). Rules 2 to 5 all need 90 days or stale issues, so none match.
+- (b) 90 days inactive, 3 open issues, passing CI, no outdated dependencies, README present, not archived: inactivity `floor((2*70*90 + 365) / 730) = floor(12965 / 730) = 17`, issues `min(3*2, 8) = 6`. Score 23, status `alive`, cause `still_active` ("Still active"). The death rules are never evaluated.
+
+Both results match the numbers in the requirements, so no correction was needed.
 #### Scene
 
 ```
@@ -221,7 +249,7 @@ vines   = outdatedDeps === true
 
 ```ts
 export const CAUSE_CODES = ["archived", "abandoned_failing_ci", "died_with_issues",
-  "outdated_and_forgotten", "quietly_retired", "still_active"] as const;
+  "outdated_and_forgotten", "quietly_retired", "fading_health", "still_active"] as const;   // 7 codes
 export type CauseCode = (typeof CAUSE_CODES)[number];
 
 export type EpitaphFacts = {
@@ -257,7 +285,7 @@ Every template is written so that its text without `{name}`, with `{days}` as 11
 
 #### Template table
 
-Each template is a single line, jokes about the repo and not the owner, says paused or waiting, and implies revival. None uses "you", "your", "failed", "failure", "lazy", "quit" or "loser". Backticks are the only markup allowed, and none are needed here.
+Each template is a single line, jokes about the repo and not the owner, says paused or waiting, and implies revival. None uses "you", "your", "failed", "failure", "lazy", "quit" or "loser". Backticks are the only markup allowed, and none are needed here. The table has 22 templates: 3 for `archived`, 3 for `abandoned_failing_ci`, 4 for `died_with_issues`, 3 for `outdated_and_forgotten`, 3 for `quietly_retired`, 3 for `fading_health` and 3 for `still_active`. Each of the 7 causes has at least 3 templates and at least one with `needs: []`. The fixed text of the longest new template (`Health fading for {days}. {name} is only resting.`) is 18 + 11 + 2 + 17 = 48 characters with `{days}` counted as 11, within the 50 character limit.
 
 | Cause | Template | Needs |
 |---|---|---|
@@ -277,6 +305,9 @@ Each template is a single line, jokes about the repo and not the owner, says pau
 | `quietly_retired` | `Asleep {days}. {name} awaits a free weekend.` | days |
 | `quietly_retired` | `{name} retired quietly. Not gone, only waiting.` | none |
 | `quietly_retired` | `{name} holds {stars} stars. It can still shine.` | stars |
+| `fading_health` | `{name} is fading, but only paused. It can wake.` | none |
+| `fading_health` | `{name} dims slowly. Not gone, only waiting.` | none |
+| `fading_health` | `Health fading for {days}. {name} is only resting.` | days |
 | `still_active` | `{name} is awake and glowing. No grave needed.` | none |
 | `still_active` | `{name} is still breathing. Last push {days} ago.` | days |
 | `still_active` | `{name} stirs. {stars} stars watch it rise.` | stars |
@@ -307,7 +338,7 @@ export const TombstoneSchema = z.strictObject({
 export type Tombstone = z.infer<typeof TombstoneSchema>;
 ```
 
-Strict objects reject a `stars` field in `scene` (7.12). Each failure reports an issue whose `path` is the offending field (`["score"]`, `["status"]`, `["scene", "fog"]`, `["epitaph"]`, `["cause", "label"]`). The schema validates shape and ranges. Agreement between score and status is guaranteed by `scoreRepo` and checked by a property test, not by the schema.
+Strict objects reject a `stars` field in `scene` (7.12). Each failure reports an issue whose `path` is the offending field (`["score"]`, `["status"]`, `["scene", "fog"]`, `["epitaph"]`, `["cause", "label"]`). The schema validates shape and ranges only, and `cause.code` comes from `CAUSE_CODES`, so it accepts all 7 codes including `fading_health`. It does not check that `score`, `status` and `cause` agree. That agreement is guaranteed by `scoreRepo` and checked by Properties 6, 7, 8, 18 and 19, not by the schema.
 
 ### `scoreRepo`
 
@@ -315,10 +346,11 @@ Strict objects reject a `stars` field in `scene` (7.12). Each failure reports an
 export function scoreRepo(repo: RepoHealth, now: Date): Tombstone {
   const facts = buildFacts(repo, now);
   const score = computeScore(facts);
-  const cause = selectCause(facts);
+  const status = statusFromScore(score);      // status first
+  const cause = selectCause(facts, status);   // cause is chosen from the status
   return {
     score,
-    status: statusFromScore(score),
+    status,
     cause: { code: cause.code, label: cause.label },
     epitaph: generateEpitaph(cause.code,
       { name: repo.name, daysInactive: facts.daysInactive, staleIssues: facts.staleIssues, stars: facts.stars },
@@ -342,14 +374,12 @@ It builds a new object, never mutates `repo` or `now`, and reads nothing from th
 
 ### Rule tables at a glance
 
-| Status | Score band | Cause precedence (first match wins) |
+| Status | Score band | Allowed causes (status first, then priority order) |
 |---|---|---|
-| `alive` | 0 to 24 | 1 archived |
-| `dying` | 25 to 59 | 2 abandoned_failing_ci |
-| `dead` | 60 to 89 | 3 died_with_issues |
-| `ancient` | 90 to 100 | 4 outdated_and_forgotten |
-| | | 5 quietly_retired |
-| | | 6 still_active |
+| `alive` | 0 to 24 | `still_active` only (living cause) |
+| `dying` | 25 to 59 | Six death causes, first match wins: 1 `archived`, 2 `abandoned_failing_ci`, 3 `died_with_issues`, 4 `outdated_and_forgotten`, 5 `quietly_retired`, 6 `fading_health` (always matches) |
+| `dead` | 60 to 89 | Same six death causes, same priority order |
+| `ancient` | 90 to 100 | Same six death causes, same priority order (archived repos are always here) |
 
 Scene mapping by effective days: fog 0 below 30, 0.33 from 30 to 119, 0.66 from 120 to 299, 1 from 300. The candle is lit for 0 to 30 days of known inactivity and never for archived repos.
 
@@ -361,7 +391,7 @@ The tombstone UI builds its text ("Inactive 412 days, CI failing, outdated depen
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
-Reflection on overlap: the range, status-enum, daysInactive-range and epitaph-length checks from 1.5 are split between the score range property (Property 1) and the epitaph property (Property 12), so each has one owner. Determinism and non-mutation (1.3, 1.4, 2.7, 6.2) merge into Property 2. The CI, issue, dependency and README monotonicity checks (13.7, 13.8) merge into Property 5, because they share one shape ("changing one fact in the worse direction never lowers the score"). Inactivity monotonicity (13.3) stays separate because it compares dates, not a flag. The per-term point rules (3.1 to 3.10) are covered by the reference model in Property 3, which also covers 5.5. The four fog, candle, crack and vine rules merge into Property 9. The epitaph determinism property (Property 13) is kept apart from the scoring determinism property because it has a different input type (names and cause codes, not repos). Finite-table checks (template counts, banned words, fixed-text width, rule order, band boundaries) are example tests, not properties.
+Reflection on overlap: the range, status-enum, daysInactive-range and epitaph-length checks from 1.5 are split between the score range property (Property 1) and the epitaph property (Property 12), so each has one owner. Determinism and non-mutation (1.3, 1.4, 2.7, 6.2) merge into Property 2. The CI, issue, dependency and README monotonicity checks (13.7, 13.8) merge into Property 5, because they share one shape ("changing one fact in the worse direction never lowers the score"). Inactivity monotonicity (13.3) stays separate because it compares dates, not a flag. The per-term point rules (3.1 to 3.10) are covered by the reference model in Property 3, which also covers 5.5. The four fog, candle, crack and vine rules merge into Property 9. The epitaph determinism property (Property 13) is kept apart from the scoring determinism property because it has a different input type (names and cause codes, not repos). The status-to-cause agreement checks (6.7, 6.8, 13.15, 13.16) are split into Property 18 (alive never has a death cause) and Property 19 (non-alive never has `still_active`), so a failure points at one direction. Property 8 owns the priority order and labels. Finite-table checks (template counts, banned words, fixed-text width, rule order, band boundaries) are example tests, not properties.
 
 ### Property 1: Score and status are always in range
 
@@ -405,11 +435,11 @@ Reflection on overlap: the range, status-enum, daysInactive-range and epitaph-le
 
 **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 13.6**
 
-### Property 8: The first matching cause rule wins
+### Property 8: Status first, then the first matching death rule wins
 
-*For any* valid `RepoHealth` and valid `now`, `cause.code` equals the code of the first rule, in the order archived, abandoned_failing_ci, died_with_issues, outdated_and_forgotten, quietly_retired, still_active, whose condition holds (computed by an independent if-chain). `cause.label` equals that rule's label and is a non-empty string of at most 80 characters, and a non-archived repo with effective days below 90 always gets `still_active`.
+*For any* valid `RepoHealth` and valid `now`, the cause is chosen from the status. When `status` is `alive`, `cause.code` is `still_active`. When `status` is `dying`, `dead` or `ancient`, `cause.code` equals the code of the first death rule, in the priority order archived, abandoned_failing_ci, died_with_issues, outdated_and_forgotten, quietly_retired, fading_health, whose condition holds (computed by an independent if-chain over status, then priority). `cause.label` equals that rule's label and is a non-empty string of at most 80 characters.
 
-**Validates: Requirements 6.1, 6.3, 6.6, 6.7, 13.5**
+**Validates: Requirements 6.1, 6.3, 6.6, 6.9, 6.10, 6.11, 13.5**
 
 ### Property 9: Scene values follow the facts
 
@@ -465,8 +495,19 @@ Reflection on overlap: the range, status-enum, daysInactive-range and epitaph-le
 
 **Validates: Requirements 11.3, 11.4, 11.5, 11.6, 11.7**
 
-## Error Handling
+### Property 18: Alive status never has a death cause
 
+*For any* valid `RepoHealth` and valid `now`, when `status` is `alive`, `cause.code` is `still_active` and is not any of the six death causes. The generators reach `alive` and each of `dying`, `dead` and `ancient` (the latter three are used by Property 19), including repos with stale issues, failing CI and outdated dependencies whose score stays below 25.
+
+**Validates: Requirements 6.7, 13.15**
+
+### Property 19: Non-alive status never has still_active
+
+*For any* valid `RepoHealth` and valid `now`, when `status` is `dying`, `dead` or `ancient`, `cause.code` is not `still_active` and is one of the six death causes. The generators reach `alive` and each of `dying`, `dead` and `ancient`, including `dying` repos under 90 days of inactivity, which must return `fading_health`.
+
+**Validates: Requirements 6.8, 13.16**
+
+## Error Handling
 The scoring core has no failure paths for callers, by design. Instead of returning errors, every step is total.
 
 | Situation | Behavior |
@@ -493,15 +534,15 @@ Scoring and epitaph generation are pure functions over a large input space (date
 ### Property tests (Vitest and fast-check)
 
 - Library: `fast-check`, already in the stack. No custom property framework.
-- Each of Properties 1 to 17 is implemented by **one** property test with `numRuns` of at least 100.
+- Each of Properties 1 to 19 is implemented by **one** property test with `numRuns` of at least 100.
 - Each test has a comment tag: `Feature: death-scoring, Property N: <title>`, with N unique and starting at 1.
 - Every `scoreRepo` call passes `now` as an argument. Generators build dates from integers (`fc.integer`), so tests never read the system clock and a failure reproduces from the fast-check seed.
 - Shared arbitraries live in `src/lib/test-utils/scoring-arbitraries.ts`:
   - `arbNow`: valid dates, plus an invalid `new Date(NaN)` with low weight.
   - `arbLastCommitAt`: ISO strings built from offsets before and after `now`, null, empty string, arbitrary strings.
   - `arbRepoHealth`: a record with the fields scoring reads. Counts use `fc.nat` mostly, with a low-weight branch for `NaN`, `Infinity`, negatives and fractions (used by Properties 11, 15 only through the "odd" variant, so the "valid" arbitrary stays schema-valid).
-  - Weighted so all four statuses and all six causes are reached. A coverage check inside the test uses `fc.statistics` or `fc.pre`-free sampling to assert every status appears across the run, which satisfies requirement 13.5.
-- Reference helpers for Properties 3 and 8 are written separately from production code (floating-point `Math.round`, plain if-chain) so the test is an independent model.
+  - Weighted so all four statuses and all seven causes are reached. A coverage check inside the test uses `fc.statistics` or `fc.pre`-free sampling to assert every status appears across the run, which satisfies requirement 13.5.
+- Reference helpers for Properties 3 and 8 are written separately from production code (floating-point `Math.round` for Property 3; for Property 8, a plain if-chain that tests the status first and then the death rules in priority order) so the test is an independent model.
 - Property 4 builds the pair by generating one repo and two commit-date offsets, then ordering them.
 - Property 5 generates a repo and one of four change kinds with `fc.constantFrom`, and applies it only when the precondition on the old value holds.
 - Property 17 generates a valid Tombstone with `scoreRepo`, picks a field and an invalid value from a list, and checks the issue path.
@@ -513,13 +554,14 @@ Files: `src/lib/scoring.test.ts`, `src/lib/epitaphs.test.ts`. Every call passes 
 - `statusFromScore`: 0 and 24 give `alive`, 25 and 59 give `dying`, 60 and 89 give `dead`, 90 and 100 give `ancient`.
 - `computeDaysInactive`: differences of 86,399,999 ms and 86,400,000 ms, a future date, null, an empty string, `"March 3 2024"`, an invalid `now`, a date 200 years old (capped at 36,500).
 - `inactivityPoints`: 0, 1, 182, 183, 365 and 1000 days against hand-calculated values.
-- `selectCause`: one repo per cause code, plus one repo that matches archived, failing CI, many stale issues, outdated deps and retired together, which must return `archived`. A second repo matching rules 2 to 5 must return `abandoned_failing_ci`.
-- `CAUSE_RULES`: exactly 6 entries in the specified order with the specified labels.
+- `selectCause(facts, status)`: one example per cause code (7 examples, with the status passed in), plus one repo that matches archived, failing CI, many stale issues, outdated deps and retired together, which must return `archived`. A second repo matching rules 2 to 5 must return `abandoned_failing_ci`.
+- `CAUSE_RULES`: exactly 7 entries in the specified order (six death rules in priority order, then `still_active`) with the specified labels and `kind` values.
+- The two contradiction examples: 29 days inactive, failing CI, outdated dependencies, no README gives score 28, `dying`, `fading_health`; 90 days inactive with 3 open issues (passing CI, no outdated dependencies, README present) gives score 23, `alive`, `still_active`.
 - Fog steps at 29, 30, 119, 120, 299 and 300 days. Candle at 30 days (lit) and 31 days (unlit).
 - Odd inputs: no commits, `outdatedDeps` null, an invalid date string, an invalid `now`, a future commit. Each asserts the full Tombstone.
 - `fnv1a32`: known vectors (empty string gives `0x811c9dc5`, `"a"` gives `0xe40c292c`). Selection index equals `hash % templates.length` when all facts are valid.
 - Template table checks, looped over `EPITAPH_TEMPLATES`:
-  - At least 3 templates for each cause, and at least one with `needs: []` per cause.
+  - At least 3 templates for each of the 7 causes, and at least one with `needs: []` per cause.
   - No banned words (`you`, `your`, `yours`, `yourself`, `failed`, `failure`, `lazy`, `quit`, `loser`) as whole words, case-insensitive.
   - No hex, `rgb(` or `hsl(` text, and no markup other than backticks.
   - Fixed text (without `{name}`, with `{days}` as 11 characters and each other number as 9) is at most 50 characters.
@@ -545,3 +587,4 @@ Requirements 1.1, 1.2, 1.6 to 1.8, 4.5, 6.5, 8.1, 8.2, 8.10 to 8.12, 9.1 to 9.5,
 2. **Requirement 8.5 versus 9.8.** A null `daysInactive` is valid and renders as "a long time". Only malformed values (negative, fractional, `NaN`) trigger the fallback template.
 3. **Name normalization.** The design collapses whitespace in the repo name and treats a blank result as empty. GitHub names never contain whitespace, so this only matters for arbitrary test input.
 4. **Duration phrase.** `{days}` renders as "N days" or "1 day", not a bare integer, so sentences stay grammatical.
+5. **Added cause `fading_health`.** Status is now computed before the cause, and `selectCause(facts, status)` returns only `still_active` for `alive` and only death causes for `dying`, `dead` and `ancient`. A seventh code, `fading_health` ("Health fading"), is the last-resort death cause. Without it, a `dying` repo under 90 days (score 28 in requirement 6.9) would match no death rule, and the old design returned "Still active" for it. The rule list now has 7 entries and the template table has 22 templates.

@@ -2,6 +2,20 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+const PURE_MESSAGE =
+  "Scoring is a pure function with no I/O or AI (tech.md, Scoring).";
+
+function defaultExportSelectors() {
+  const message = "Use named exports under src/lib (tech.md, Code style).";
+  return [
+    { selector: "ExportDefaultDeclaration", message },
+    {
+      selector: "ExportNamedDeclaration > ExportSpecifier[exported.name='default']",
+      message,
+    },
+  ];
+}
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -71,6 +85,80 @@ const eslintConfig = defineConfig([
             "MemberExpression[object.name='process'][property.name='env']",
           message:
             "Do not read process.env in client code. Secrets must never reach the browser.",
+        },
+      ],
+    },
+  },
+  // Named exports only under src/lib (tech.md "Code style"). A later block that sets
+  // no-restricted-syntax for the same files replaces this one, so those blocks repeat
+  // these selectors.
+  {
+    files: ["src/lib/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": ["error", ...defaultExportSelectors()],
+    },
+  },
+  // src/lib/graveyard is also client code: keep the process.env ban next to the default-export ban.
+  {
+    files: ["src/lib/graveyard/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...defaultExportSelectors(),
+        {
+          selector:
+            "MemberExpression[object.name='process'][property.name='env']",
+          message:
+            "Do not read process.env in client code. Secrets must never reach the browser.",
+        },
+      ],
+    },
+  },
+  // Scoring and epitaphs are pure: no I/O, no clock reads, no randomness, no AI.
+  // The current time is passed in as an argument. See .kiro/steering/tech.md ("Scoring").
+  {
+    files: ["src/lib/scoring.ts", "src/lib/epitaphs.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            "fs",
+            "node:fs",
+            "fs/promises",
+            "node:fs/promises",
+            "http",
+            "https",
+            "node:http",
+            "node:https",
+            "octokit",
+            "@google/genai",
+            "openai",
+            "@anthropic-ai/sdk",
+            "ai",
+          ].map((name) => ({ name, message: PURE_MESSAGE })),
+          patterns: [{ group: ["@octokit/*"], message: PURE_MESSAGE }],
+        },
+      ],
+      "no-restricted-globals": [
+        "error",
+        { name: "fetch", message: PURE_MESSAGE },
+      ],
+      "no-restricted-properties": [
+        "error",
+        { object: "Math", property: "random", message: PURE_MESSAGE },
+        {
+          object: "Date",
+          property: "now",
+          message: "Pass the current time in as an argument (tech.md, Scoring).",
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        ...defaultExportSelectors(),
+        {
+          selector: "NewExpression[callee.name='Date'][arguments.length=0]",
+          message: "Pass the current time in as an argument (tech.md, Scoring).",
         },
       ],
     },

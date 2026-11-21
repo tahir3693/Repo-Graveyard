@@ -17,7 +17,7 @@ export interface TombstoneProps {
   onSelect?: () => void;
 }
 
-const STATUS_LABEL: Record<TombstoneStatus, string> = {
+export const STATUS_LABEL: Record<TombstoneStatus, string> = {
   alive: "Alive",
   dying: "Dying",
   dead: "Dead",
@@ -25,7 +25,7 @@ const STATUS_LABEL: Record<TombstoneStatus, string> = {
 };
 
 /** One distinct shape per status, so status never relies on color alone. */
-function StatusIcon({ status }: { status: TombstoneStatus }) {
+export function StatusIcon({ status }: { status: TombstoneStatus }) {
   return (
     <svg
       className="tombstone-status-icon"
