@@ -1,41 +1,45 @@
 # Repo Graveyard
 
-A haunted dashboard for your unfinished GitHub projects. Each abandoned repo becomes a tombstone in a graveyard scene. Fixed rules score how abandoned it is, and an AI writes a revival plan and a ready-to-file GitHub issue to bring it back.
+Find your dead repos and get a plan to revive them.
 
-Built for students, freelancers and hobbyists with too many half-finished repos. The tone is dark humor that jokes about a repo's fate, never about you. A repo is paused, not failed.
+Repo Graveyard is a haunted web dashboard for unfinished GitHub projects. It reads your repositories, scores how abandoned each one is with fixed rules, and shows each repo as a tombstone in a graveyard scene. Open a tombstone to see its death score and cause of death, then click Resurrect. An AI writes a revival plan and a ready-to-file GitHub issue, and you can file that issue on the repo with one click. It is built for students, freelancers and hobbyists with many half-finished repos. The tone is dark humor that jokes about a repo's fate, never about you. A repo is paused, not failed.
 
-> **Project status:** work in progress. The design system, tombstone, graveyard scene and resurrection animation are built. Sign-in, GitHub scanning, scoring, the graveyard page and the AI routes are specified in `.kiro/specs/` and not yet implemented. See [Features](#features) for what works today.
+## Screenshots
 
-![Screenshot placeholder: the graveyard scene with tombstones, fog and a moon](docs/screenshot.png)
+**Landing page**
 
-*Screenshot coming soon. Save one as `docs/screenshot.png` and it will show up here.*
+![Landing page with the title, sign-in and demo buttons, and three sample tombstones](docs/screenshots/after-landing.png)
+
+**The graveyard**
+
+![The graveyard scene with four tombstones: alive, dead, dead and ancient](docs/screenshots/after-graveyard.png)
+
+**Detail drawer with a revival plan**
+
+![The detail drawer for todo-app with its death score, cause of death and a revival plan](docs/screenshots/after-drawer.png)
 
 ## Features
 
-Status: **built** works today, **specified** has a full spec but no code yet.
-
-- **Tombstone** (built): one stone per repo, with the name, status, epitaph, a rising entrance, a hover lift and a flickering candle glow.
-- **Graveyard scene** (built): a moon and sky whose brightness follows how many repos are alive, three drifting fog layers, and subtle pointer parallax. Pure SVG and CSS.
-- **Resurrection animation** (built): fog parts around the stone, the stone glows, then the revival plan fades in. It includes loading and error states and finishes in 1.4 seconds after the plan arrives.
-- **Design system** (built): dark palette, Cinzel and Inter fonts, spacing, radius and motion tokens as CSS variables. Reduced motion is respected everywhere.
-- **Sign in with GitHub** (built): Auth.js route with the `public_repo` scope; the GitHub token stays in the server-side session.
-- **Scan** (built): `POST /api/scan` reads up to 300 repos on the server, skips forks by default, validates every GitHub response with Zod and returns typed errors.
-- **Death score** (built): `scoreRepo` gives a 0 to 100 score, a status, a cause of death, an epitaph and scene values from fixed rules; only the status and cause rules are tested so far. No AI in scoring.
-- **Graveyard page** (in progress): one tombstone per repo and an accessible detail drawer are built; summary, filters, sorting and the list view are not.
-- **Resurrect** (built): `POST /api/resurrect` asks Gemini for a revival plan from read-only repo data, with a rule-built fallback plan. **File this issue** is in progress: `POST /api/issue` files the plan to the signed-in owner's repo and refuses demo mode; the button is not in the UI yet.
-- **Demo mode** (built): `/graveyard?demo=1` scans a fixed public account and writes revival plans with no login.
-
-Every spooky element carries data. Fog thickness is days of inactivity, a lit candle is recent activity, cracks are failing CI, vines are outdated dependencies, and a bigger stone is more stars.
+- **Sign in with GitHub.** Auth.js with the `public_repo` scope. The GitHub token stays in the encrypted session cookie and never reaches the browser.
+- **Scan.** `POST /api/scan` reads up to 300 repos on the server, skips forks, checks every GitHub response with Zod and returns typed, safe errors. Results are cached in memory for one hour per user and five minutes for the demo account.
+- **Death score.** A pure function turns a repo's facts into a 0 to 100 score, a status (`alive`, `dying`, `dead` or `ancient`), a cause of death and an epitaph. The same input always gives the same result, and AI is never used for scoring.
+- **Graveyard scene.** One tombstone per repo. The status has a text label and its own shape, the cause and epitaph are shown on the stone, and a lit candle means recent activity. The moon and sky get brighter the more repos are alive, and three fog layers drift behind the stones.
+- **Detail drawer.** A modal dialog with the repo's status, death score, cause of death, epitaph and a link to the repo on GitHub. Focus is trapped inside, and Escape, the Close button or a click outside closes it.
+- **Resurrect.** `POST /api/resurrect` gathers a small, length-capped bundle of repo context and asks Gemini for a revival plan with a diagnosis, a smallest next step and an effort estimate. If the model output is invalid, the server returns a rule-built plan instead. The result is rate limited per session.
+- **File this issue.** `POST /api/issue` files the plan as a GitHub issue on the signed-in owner's repo. It refuses archived repos, repos with issues turned off and any repo that is not yours.
+- **Demo mode.** Explore the graveyard and generate revival plans with no login. Filing issues is disabled.
+- **Accessibility.** Keyboard navigation, a skip link, visible focus rings, and `prefers-reduced-motion` turns off the animation loops.
+- **Security headers.** Every response sets `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and `Permissions-Policy`.
 
 ## How it works
 
 1. **Sign in or try the demo.** Sign in with GitHub, or open the demo graveyard with no account.
-2. **Scan.** The server reads your repositories from GitHub and checks every response against a Zod schema.
-3. **Score.** Fixed rules turn each repo's facts into a death score, a status, a cause of death and an epitaph. The same input always gives the same result.
-4. **Visit the graveyard.** Each repo is a tombstone. Fog, candle, cracks, vines and size show its condition.
-5. **Resurrect.** Open a tombstone and click Resurrect. The server gathers a small, length-capped bundle of repo context and asks an LLM for a plan. The plan is validated, then you can file it as a GitHub issue.
+2. **Scan.** The server reads your repositories from GitHub and validates every response against a Zod schema.
+3. **Score.** Fixed rules turn each repo's facts into a death score, a status, a cause of death and an epitaph.
+4. **Visit the graveyard.** Each repo is a tombstone. Click one to open its drawer.
+5. **Resurrect.** The server asks an LLM for a revival plan from a capped bundle of repo context and validates the answer. You can then file the plan as a GitHub issue.
 
-AI writes, rules judge. The LLM only writes the revival plan and the issue text. It never scores anything.
+AI writes, rules judge. The LLM only writes the revival plan and the issue text.
 
 ## Tech stack
 
@@ -49,11 +53,11 @@ AI writes, rules judge. The LLM only writes the revival plan and the issue text.
 - [Vitest](https://vitest.dev) and [fast-check](https://fast-check.dev) for unit and property tests
 - [Playwright](https://playwright.dev) for end-to-end tests
 
-There is no database. State lives in memory or in the Auth.js session.
+There is no database. State lives in server memory and in the Auth.js session cookie.
 
 ## Setup
 
-You need Node.js 20 or newer and a GitHub account.
+You need a recent Node.js (Next.js 16 needs 20.9 or newer) and a GitHub account.
 
 ### 1. Clone and install
 
@@ -68,9 +72,9 @@ npm install
 1. Open GitHub, then **Settings**, **Developer settings**, **OAuth Apps**, **New OAuth App**.
 2. Set **Homepage URL** to `http://localhost:3000`.
 3. Set **Authorization callback URL** to `http://localhost:3000/api/auth/callback/github`.
-4. Register the app, copy the **Client ID**, and generate a **Client secret**.
+4. Register the app, copy the **Client ID** and generate a **Client secret**.
 
-### 3. Fill in `.env.local`
+### 3. Copy `.env.example` to `.env.local` and fill it in
 
 ```bash
 cp .env.example .env.local
@@ -78,17 +82,19 @@ cp .env.example .env.local
 
 On Windows PowerShell, use `Copy-Item .env.example .env.local`.
 
-| Variable | What to put there |
-|---|---|
-| `GITHUB_ID` | The OAuth App's Client ID. |
-| `GITHUB_SECRET` | The OAuth App's Client secret. |
-| `AUTH_SECRET` | A random string that signs session cookies. Generate one with `openssl rand -base64 32`. |
-| `LLM_API_KEY` | Your LLM provider key, used only on the server to write revival plans. |
-| `GITHUB_DEMO_TOKEN` | Optional. A GitHub token with no scopes. It raises rate limits for demo mode. |
+| Variable | Required | What to put there and where to get it |
+|---|---|---|
+| `GITHUB_ID` | Yes | The OAuth App's Client ID, from step 2. |
+| `GITHUB_SECRET` | Yes | The OAuth App's Client secret, from step 2. |
+| `AUTH_SECRET` | Yes | A random string that signs session cookies. Generate one with `openssl rand -base64 32`. |
+| `NEXTAUTH_URL` | Yes | The app's base URL, `http://localhost:3000` for local runs. |
+| `LLM_API_KEY` | For Resurrect | A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey). Used only on the server. |
+| `LLM_MODEL` | No | A Gemini model id. Defaults to `gemini-2.5-flash-lite` when empty. |
+| `GITHUB_DEMO_USERNAME` | For demo mode | The public GitHub username whose repos demo mode shows. |
+| `GITHUB_DEMO_TOKEN` | No | A read-only GitHub personal access token that raises rate limits for demo mode. Create one under **Settings**, **Developer settings**, **Personal access tokens**. |
+| `GITHUB_API_BASE_URL` | No | Test-only. Points GitHub calls at a local mock on a loopback address. Leave it empty. |
 
 `.env.local` is ignored by git. Never commit it, and never put a real value in `.env.example`.
-
-The specs also name `NEXTAUTH_URL` (set it to `http://localhost:3000`), `GITHUB_DEMO_USERNAME` (the public account that demo mode scans) and `LLM_MODEL`. These are not in `.env.example` yet.
 
 ### 4. Run
 
@@ -98,17 +104,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Try the demo mode
+## Demo mode
 
-Demo mode lets anyone explore the graveyard with no login:
+Demo mode lets anyone explore the graveyard with no login.
 
-1. Open the landing page.
-2. Click **Try demo graveyard**. You go to `/graveyard?demo=1`.
+1. Set `GITHUB_DEMO_USERNAME` in `.env.local` (and optionally `GITHUB_DEMO_TOKEN`).
+2. Open the landing page and click **Try demo graveyard**. You go to `/graveyard?demo=1`.
 3. Click a tombstone to open its drawer, then click **Resurrect** to see a revival plan.
 
-Demo mode scans one fixed public account that the server chooses. It is read-only, its results are cached for a few minutes, and **File this issue** is disabled in it. Setting `GITHUB_DEMO_TOKEN` gives it higher GitHub rate limits.
-
-The landing page, graveyard page and demo routes are still specified, not built, so this flow does not run yet.
+Demo mode scans the one public account you configured, never reads a user session, and caches results for five minutes. **File this issue** is disabled in demo mode. The server answers any issue request from a demo session with `403 demo_mode` and makes no GitHub call.
 
 ## Tests
 
@@ -117,68 +121,12 @@ The landing page, graveyard page and demo routes are still specified, not built,
 | `npm run lint` | ESLint, including rules that keep server-only code and secrets out of client files. |
 | `npm run typecheck` | `tsc --noEmit`. |
 | `npm run test` | Vitest unit tests and fast-check property tests, which live next to the code as `*.test.ts`. |
-| `npm run e2e` | Playwright end-to-end tests in `e2e/`. They build the app, start it on port 3100 and run in your installed Google Chrome. |
+| `npm run e2e` | Playwright end-to-end tests in `e2e/`. They build the app, start it on port 3100 with a mock GitHub server, and run in your installed Google Chrome. |
+| `npm run check:bundle` | After `npm run build`, checks the client bundle for secrets and server-only code. |
 
-The end-to-end demo path test (`e2e/demo-path.spec.ts`) mocks `/api/scan` and `/api/resurrect`. It is written ahead of the pages it drives, so it fails until the landing page and graveyard page exist.
+## Built with Kiro
 
-## How Kiro was used
-
-This project was built with [Kiro](https://kiro.dev), with the rules written down before the code.
-
-### Steering
-
-Always-on rules in `.kiro/steering/`:
-
-- `product.md`: what the app is, the audience, the tone and the glossary.
-- `tech.md`: the stack, the server-and-secrets rules, validation, pure scoring, no database, testing.
-- `design-system.md`: palette, fonts, spacing, motion, the visual vocabulary, epitaph voice and accessibility. Components must use its CSS variables, never hard-coded colors.
-- `submission-guard.md`: a pre-submission checklist you run with `/submission-guard`.
-
-### Specs
-
-Five specs in `.kiro/specs/`, each with requirements in EARS format, a design and a task list:
-
-- `project-scaffold`: the Next.js base and tooling.
-- `auth-ingestion`: GitHub sign-in and the scan route.
-- `death-scoring`: the deterministic score, status, cause and epitaph.
-- `graveyard-ui`: the landing page, graveyard, filters and drawer.
-- `resurrection`: the revival plan, the issue route and prompt-injection handling.
-
-The Tombstone, graveyard scene and resurrection animation were built directly, with no spec, to compare the two ways of working.
-
-### Hooks
-
-Agent hooks in `.kiro/hooks/`:
-
-- Lint and typecheck on every `.ts` or `.tsx` save.
-- Run the scoring tests, including the property tests, when `scoring.ts` or `epitaphs.ts` is saved.
-- Check for hard-coded colors whenever a file in `src/components` is saved.
-- Update the feature list in this README when a spec task is completed.
-
-### MCP
-
-Configured in `.kiro/settings/mcp.json`:
-
-- **GitHub MCP** (read-only): used to list repositories, read commits and read workflow runs. It reads its token from the `GITHUB_MCP_TOKEN` environment variable, so no token is stored in any file.
-- **Playwright MCP**: opens the running app in Chrome, takes screenshots and reads computed styles, so the design-system audits use real measurements.
-
-### Custom agent
-
-`gravedigger` in `.kiro/agents/` polishes the UI against the design system. It may edit only the UI files and never scoring, API, auth or GitHub code.
-
-### Property-based tests
-
-The specs define 74 correctness properties across the four code specs (16 for ingestion, 17 for scoring, 18 for the UI logic and 23 for resurrection). They cover things like:
-
-- the score is always an integer from 0 to 100
-- more inactivity never lowers the score
-- archived repos are always ancient
-- failing CI never lowers the score
-- the same input always gives the same output
-- every epitaph is bounded and clean
-- context capping and plan parsing hold for all inputs
-
-fast-check runs them over generated inputs. Two property suites exist today, for the moon brightness rule and the resurrect state machine. The rest are specified and will be implemented with their specs.
+This project was built with [Kiro](https://kiro.dev): steering files, specs, hooks, MCP servers and a custom agent. See [docs/how-kiro-was-used.md](docs/how-kiro-was-used.md) for what each one did and which parts were verified.
 
 ## License
 

@@ -98,6 +98,8 @@ const eslintConfig = defineConfig([
                 "@/lib/llm",
                 "@/lib/llm-gemini",
                 "@/lib/github/*",
+                "!@/lib/github/repo-health",
+                "!@/lib/github/sort",
                 "@/lib/e2e/*",
               ],
               message: "Server-only module. Call the app's own API route instead.",

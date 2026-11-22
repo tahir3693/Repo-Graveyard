@@ -21,7 +21,7 @@ Assumptions to verify during implementation (do not skip):
 ## Tasks
 
 - [ ] 1. Foundations
-  - [ ] 1.1 Verify upstream imports and create shared types
+  - [x] 1.1 Verify upstream imports and create shared types
     - Open the installed `framer-motion` package and the auth-ingestion and death-scoring modules. Confirm every name and path listed in the assumptions above. Record any difference as a short comment at the top of `src/lib/graveyard/types.ts`.
     - Create `src/lib/graveyard/types.ts` with `GraveEntry`, `LanguageFilter`, `Filters`, `SortOrder`, `ViewMode` and `NO_FILTERS`, importing `RepoHealth`, `Tombstone` and `Status` as types.
     - Run `npm run typecheck` to confirm the upstream imports resolve.
