@@ -91,9 +91,10 @@
   overflow-wrap: anywhere;
 }
 
+/* Bone white on the raised stone is about 11:1, above the 4.5:1 minimum. */
 .tombstone-epitaph {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   overflow-wrap: anywhere;
 }
 
@@ -113,11 +114,14 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 96px;
-  height: 96px;
-  margin-left: -48px;
+  width: 112px;
+  height: 112px;
+  margin-left: -56px;
   border-radius: var(--radius-full);
-  background: radial-gradient(circle, var(--color-glow-soft) 0%, transparent 70%);
+  /* Two layers: a wide halo plus a tighter core, so the glow reads a little stronger. */
+  background:
+    radial-gradient(circle, var(--color-glow-soft) 0%, transparent 45%),
+    radial-gradient(circle, var(--color-glow-soft) 0%, transparent 70%);
   transform-origin: center bottom;
   will-change: opacity, transform;
 }
@@ -138,4 +142,5 @@
 
 .tombstone-flame {
   fill: var(--color-glow);
+  filter: drop-shadow(0 0 var(--space-2) var(--color-glow));
 }

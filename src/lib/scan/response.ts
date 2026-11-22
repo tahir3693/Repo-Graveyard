@@ -76,6 +76,8 @@ export const ScanSuccessSchema = z.object({
   stale: z.boolean().optional(),
   cachedAt: z.iso.datetime().optional(),
   resetAt: z.iso.datetime().optional(),
+  /** True only in demo mode, when the bundled sample repos replace GitHub data. */
+  sampleData: z.boolean().optional(),
 });
 
 export type ScanSuccess = z.infer<typeof ScanSuccessSchema>;

@@ -65,6 +65,27 @@ describe("scanRepos", () => {
     await expect(scanRepos({ demo: false }, fetch)).rejects.toMatchObject({ kind: "http" });
   });
 
+  it("keeps only the typed error code from a failed response", async () => {
+    const { fetch } = fakeFetch({ error: { code: "rate_limited", message: "secret upstream text" } }, 429);
+    const error = await scanRepos({ demo: false }, fetch).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(GraveyardRequestError);
+    expect(error).toMatchObject({ kind: "http", code: "rate_limited" });
+    expect(JSON.stringify(error)).not.toContain("secret upstream text");
+  });
+
+  it.each([{ error: { code: "Bad Code!" } }, { nope: true }, "text"])(
+    "uses a null code when the error body is %j",
+    async (body) => {
+      const { fetch } = fakeFetch(body, 500);
+      await expect(scanRepos({ demo: true }, fetch)).rejects.toMatchObject({ kind: "http", code: null });
+    },
+  );
+
+  it("accepts the sampleData flag", async () => {
+    const { fetch } = fakeFetch({ ...SCAN, sampleData: true });
+    expect((await scanRepos({ demo: true }, fetch)).sampleData).toBe(true);
+  });
+
   it("rejects a response that fails validation", async () => {
     const { fetch } = fakeFetch({ ...SCAN, repos: [{ ...REPO, openIssues: -1 }] });
     await expect(scanRepos({ demo: true }, fetch)).rejects.toMatchObject({ kind: "invalid" });

@@ -35,6 +35,7 @@ export const ScanSuccessSchema = z.object({
   stale: z.boolean().optional(),
   cachedAt: z.iso.datetime().optional(),
   resetAt: z.iso.datetime().optional(),
+  sampleData: z.boolean().optional(),
 });
 
 export type ScanSuccess = z.infer<typeof ScanSuccessSchema>;
@@ -76,11 +77,28 @@ const RepoNameSchema = z
 /** A safe, generic failure. Never carries response text, tokens or repo data. */
 export class GraveyardRequestError extends Error {
   readonly kind: "network" | "http" | "invalid";
+  /** The typed error code from the app's own API, when the response had one. */
+  readonly code: string | null;
 
-  constructor(kind: "network" | "http" | "invalid") {
+  constructor(kind: "network" | "http" | "invalid", code: string | null = null) {
     super(`Graveyard request failed: ${kind}`);
     this.name = "GraveyardRequestError";
     this.kind = kind;
+    this.code = code;
+  }
+}
+
+/** Only the code of an API error body. Message and other fields are never read. */
+const ApiErrorBodySchema = z.object({
+  error: z.object({ code: z.string().regex(/^[a-z_]{1,40}$/) }),
+});
+
+async function readErrorCode(response: Response): Promise<string | null> {
+  try {
+    const parsed = ApiErrorBodySchema.safeParse(await response.json());
+    return parsed.success ? parsed.data.error.code : null;
+  } catch {
+    return null;
   }
 }
 
@@ -106,7 +124,7 @@ async function postJson(
     if (signal?.aborted) throw error;
     throw new GraveyardRequestError("network");
   }
-  if (!response.ok) throw new GraveyardRequestError("http");
+  if (!response.ok) throw new GraveyardRequestError("http", await readErrorCode(response));
   try {
     return await response.json();
   } catch {

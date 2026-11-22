@@ -20,6 +20,11 @@ export function readAuthEnv(env: EnvRecord): AuthEnv | null {
   return { githubId, githubSecret, authSecret };
 }
 
+/** True when GitHub sign-in can work: client id, client secret and auth secret are all set. */
+export function isAuthConfigured(env: EnvRecord): boolean {
+  return readAuthEnv(env) !== null;
+}
+
 export function readDemoConfig(env: EnvRecord): DemoConfig | null {
   const username = readTrimmed(env, "GITHUB_DEMO_USERNAME");
   if (username === null || !USERNAME_PATTERN.test(username)) {

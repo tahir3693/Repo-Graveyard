@@ -24,6 +24,22 @@ describe("LandingActions", () => {
     expect(html).toContain("Try demo graveyard");
   });
 
+  it("shows the not-set-up message and keeps the Sign in button when auth env is missing", () => {
+    const html = renderToStaticMarkup(
+      <LandingActions login={null} errorMessage={null} signInConfigured={false} />,
+    );
+    expect(html).toContain("GitHub sign-in is not set up on this server yet. Try the demo graveyard.");
+    expect(html).toContain("Sign in with GitHub");
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain("Try demo graveyard");
+  });
+
+  it("hides the not-set-up message when sign-in is configured", () => {
+    const html = renderToStaticMarkup(<LandingActions login={null} errorMessage={null} />);
+    expect(html).not.toContain("not set up");
+    expect(html).not.toContain("aria-disabled");
+  });
+
   it("shows the error message and keeps the Sign in button", () => {
     const html = renderToStaticMarkup(
       <LandingActions login={null} errorMessage="The gate stayed shut." />,
@@ -35,10 +51,17 @@ describe("LandingActions", () => {
 });
 
 describe("NotSignedIn", () => {
-  it("offers Sign in and a Try the demo link to /graveyard?demo=1", () => {
+  it("offers Sign in and a Try the demo graveyard link to /graveyard?demo=1", () => {
     const html = renderToStaticMarkup(<NotSignedIn />);
     expect(html).toContain("Sign in with GitHub");
-    expect(html).toMatch(/<a href="\/graveyard\?demo=1"[^>]*>Try the demo<\/a>/);
+    expect(html).toMatch(/<a href="\/graveyard\?demo=1"[^>]*>Try the demo graveyard<\/a>/);
     expect(html).not.toContain("gates are stuck");
+  });
+
+  it("explains a missing server setup inline and keeps the demo link", () => {
+    const html = renderToStaticMarkup(<NotSignedIn signInConfigured={false} />);
+    expect(html).toContain("GitHub sign-in is not set up on this server yet. Try the demo graveyard.");
+    expect(html).toContain("Sign in with GitHub");
+    expect(html).toContain("Try the demo graveyard</a>");
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GitHubRequester } from "../github/requester";
+import { getSampleRepos } from "../demo/sample-repos";
 import { createScanCache } from "./cache";
 import { handleScan, type ScanDeps } from "./handler";
 import { ERROR_TABLE, SafeErrorSchema, ScanSuccessSchema, type ErrorCode } from "./response";
@@ -383,17 +384,34 @@ describe("handleScan demo branch", () => {
     expect(h.tokensUsed).toEqual([null]);
   });
 
-  it("returns demo_unavailable without calling GitHub when unconfigured", async () => {
-    const h = harness({ repos }, { ...AUTH_ENV });
-    await errorOf(await handleScan(h.deps, post({ demo: true })), "demo_unavailable");
+  it("falls back to sample repos without calling GitHub when the demo username is missing", async () => {
+    const h = harness({ repos }, { ...AUTH_ENV, GITHUB_DEMO_TOKEN: DEMO_TOKEN });
+    const res = await handleScan(h.deps, post({ demo: true }));
+    const body = await successOf(res);
+    expect(body.mode).toBe("demo");
+    expect(body.sampleData).toBe(true);
+    expect(body.repos).toEqual(getSampleRepos(NOW));
+    expect(body.repos).toHaveLength(8);
     expect(h.makeRequester).not.toHaveBeenCalled();
     expect(h.fake.calls).toEqual([]);
     expect(h.readUserToken).not.toHaveBeenCalled();
+    expect(JSON.stringify(body)).not.toContain(DEMO_TOKEN);
+    expect(h.log).toHaveBeenCalledWith({ code: "demo_sample_no_username", requestId: expect.any(String) });
+    // Sample data is never cached.
+    expect(h.cache.get("demo", NOW.getTime(), 1000, false)).toBeNull();
   });
 
-  it("returns demo_unavailable for an invalid demo username", async () => {
+  it("falls back to sample repos for an invalid demo username", async () => {
     const h = harness({ repos }, { GITHUB_DEMO_USERNAME: "bad name!" });
-    await errorOf(await handleScan(h.deps, post({ demo: true })), "demo_unavailable");
+    const body = await successOf(await handleScan(h.deps, post({ demo: true })));
+    expect(body.sampleData).toBe(true);
+    expect(h.fake.calls).toEqual([]);
+  });
+
+  it("does not set sampleData for real GitHub data", async () => {
+    const h = harness({ repos });
+    const body = await successOf(await handleScan(h.deps, post({ demo: true })));
+    expect(body.sampleData).toBeUndefined();
   });
 
   it("serves a fresh cache hit without calling GitHub, then expires after 5 minutes", async () => {
@@ -422,32 +440,62 @@ describe("handleScan demo branch", () => {
     clock.value = new Date(NOW.getTime() + 1_000);
     const failing = harness({ listError: { status: 500 } });
     const deps: ScanDeps = { ...failing.deps, cache: h.cache, now: () => clock.value };
-    await errorOf(await handleScan(deps, post({ demo: true, includeForks: true })), "github_unavailable");
+    const fallback = await successOf(await handleScan(deps, post({ demo: true, includeForks: true })));
+    expect(fallback.sampleData).toBe(true);
     expect(failing.fake.calls.length).toBeGreaterThan(0);
     expect(h.cache.get("demo", NOW.getTime(), 300_000, false)).toBe(before);
   });
 
-  it("does not use the user cache as a stale fallback on a demo rate limit", async () => {
+  it("falls back to sample repos when GitHub answers 403 rate limited", async () => {
+    const limited = harness({
+      listError: {
+        status: 403,
+        message: "API rate limit exceeded",
+        response: { headers: { "x-ratelimit-remaining": "0" } },
+      },
+    });
+    const res = await handleScan(limited.deps, post({ demo: true }));
+    const body = await successOf(res);
+    expect(body.mode).toBe("demo");
+    expect(body.sampleData).toBe(true);
+    expect(body.repos).toEqual(getSampleRepos(NOW));
+    expect(limited.fake.calls.length).toBeGreaterThan(0);
+    expect(limited.log).toHaveBeenCalledWith({
+      code: "demo_sample_rate_limited",
+      requestId: expect.any(String),
+    });
+    expect(JSON.stringify(body)).not.toContain(DEMO_TOKEN);
+  });
+
+  it("falls back to sample repos on a 429, ignoring the user cache", async () => {
     const h = harness({ repos });
     await successOf(await handleScan(h.deps, post({})));
     const limited = harness({ listError: { status: 429 } });
     const deps: ScanDeps = { ...limited.deps, cache: h.cache };
-    await errorOf(await handleScan(deps, post({ demo: true })), "rate_limited");
+    const body = await successOf(await handleScan(deps, post({ demo: true })));
+    expect(body.sampleData).toBe(true);
+    expect(body.repos).toEqual(getSampleRepos(NOW));
   });
 
-  it("maps a rejected demo token to demo_unavailable without clearing cookies", async () => {
-    const h = harness({ listError: { status: 401 } });
+  it.each([
+    ["a rejected demo token (401)", { status: 401 }, "demo_sample_token_revoked"],
+    ["a missing demo account (404)", { status: 404 }, "demo_sample_not_found"],
+    ["a GitHub outage (500)", { status: 500 }, "demo_sample_unavailable"],
+  ])("falls back to sample repos on %s without clearing cookies", async (_label, listError, code) => {
+    const h = harness({ listError });
     const res = await handleScan(
       h.deps,
       post({ demo: true }, { cookie: "next-auth.session-token=abc" }),
     );
-    await errorOf(res, "demo_unavailable");
+    const body = await successOf(res);
+    expect(body.sampleData).toBe(true);
     expect(res.headers.get("set-cookie")).toBeNull();
+    expect(h.log).toHaveBeenCalledWith({ code, requestId: expect.any(String) });
   });
 
-  it("maps demo account 404 to account_not_found", async () => {
-    const h = harness({ listError: { status: 404 } });
-    await errorOf(await handleScan(h.deps, post({ demo: true })), "account_not_found");
+  it("does not fall back for the signed-in branch", async () => {
+    const h = harness({ listError: { status: 500 } });
+    await errorOf(await handleScan(h.deps, post({})), "github_unavailable");
   });
 
   it("returns empty_account for an empty demo account", async () => {

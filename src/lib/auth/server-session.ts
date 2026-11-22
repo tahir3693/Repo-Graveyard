@@ -24,9 +24,7 @@ export function toSessionUser(session: unknown): SessionUser | null {
  * Server only. Reads the signed-in user from the encrypted session cookie.
  * Returns null when signed out, not configured, or the cookie is invalid.
  */
-export async function readSessionUser(
-  env: EnvRecord = process.env,
-): Promise<SessionUser | null> {
+export async function readSessionUser(env: EnvRecord): Promise<SessionUser | null> {
   const authEnv = readAuthEnv(env);
   if (authEnv === null) return null;
   try {

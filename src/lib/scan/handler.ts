@@ -2,6 +2,7 @@ import { appendClearCookies, sessionCookieNames } from "../auth/session-cookies"
 import { readAuthEnv, readDemoConfig, type EnvRecord } from "../env";
 import { ScanFailureError, type ScanFailure } from "../github/errors";
 import type { GitHubRequester } from "../github/requester";
+import { getSampleRepos } from "../demo/sample-repos";
 import { scanAccount, type ScanAccount, type ScanData } from "../github/scan";
 import { DEMO_CACHE_TTL_MS, USER_CACHE_TTL_MS, type ScanCache } from "./cache";
 import { parseScanRequest, type ScanRequest } from "./request";
@@ -112,10 +113,32 @@ type ScanContext = {
   body: ScanRequest;
 };
 
+/**
+ * Demo mode never fails because of GitHub or missing config: it serves the bundled sample
+ * repos instead. The sample data holds no token and the response carries `sampleData: true`.
+ * Only the reason code and request id are logged.
+ */
+function sampleResponse(ctx: ScanContext, reason: string): Response {
+  const { deps, requestId, req } = ctx;
+  deps.log({ code: reason, requestId });
+  const candidate = {
+    mode: "demo" as const,
+    repos: getSampleRepos(deps.now()),
+    skippedForks: 0,
+    skippedInvalid: 0,
+    truncated: false,
+    sampleData: true,
+  };
+  const parsed = ScanSuccessSchema.safeParse(candidate);
+  return parsed.success
+    ? Response.json(parsed.data, { status: 200 })
+    : failWith(deps, requestId, req, { code: "internal_error" });
+}
+
 async function runDemo(ctx: ScanContext): Promise<Response> {
   const { deps, requestId, req, body } = ctx;
   const config = readDemoConfig(deps.env);
-  if (config === null) return failWith(deps, requestId, req, { code: "demo_unavailable" });
+  if (config === null) return sampleResponse(ctx, "demo_sample_no_username");
 
   const nowMs = deps.now().getTime();
   const hit = deps.cache.get(DEMO_CACHE_KEY, nowMs, DEMO_CACHE_TTL_MS, body.includeForks);
@@ -126,11 +149,19 @@ async function runDemo(ctx: ScanContext): Promise<Response> {
   }
 
   const account: ScanAccount = { kind: "demo", username: config.username };
-  const data = await scanAccount(
-    { request: deps.makeRequester(config.token), now: deps.now() },
-    account,
-    body.includeForks,
-  );
+  let data: ScanData;
+  try {
+    data = await scanAccount(
+      { request: deps.makeRequester(config.token), now: deps.now() },
+      account,
+      body.includeForks,
+    );
+  } catch (error) {
+    if (error instanceof ScanFailureError) {
+      return sampleResponse(ctx, `demo_sample_${error.failure.kind}`);
+    }
+    throw error;
+  }
   deps.cache.set(DEMO_CACHE_KEY, data, body.includeForks, deps.now().getTime());
   const response = successResponse("demo", data);
   return response ?? failWith(deps, requestId, req, { code: "internal_error" });

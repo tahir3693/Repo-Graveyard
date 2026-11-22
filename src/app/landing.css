@@ -1,52 +1,88 @@
 /* Landing page. Tokens only: see .kiro/steering/design-system.md. Mobile first. */
 .landing {
-  position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow: hidden;
 }
 
-.landing-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.6;
+/* Top bar: wordmark left, Demo link right. Not sticky, so it never covers content. */
+.landing-topbar {
+  border-bottom: 1px solid var(--color-border);
 }
 
-.landing-bg .scene {
-  height: 100%;
-}
-
-.landing-bg .scene-content {
-  position: absolute;
-  inset: auto 0 0 0;
-  padding-bottom: var(--space-12);
-}
-
-.landing-stones {
+.landing-topbar-inner {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-4);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
 }
 
-.landing-stones > :nth-child(3) {
-  display: none;
+.landing-wordmark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--color-text);
+  text-decoration: none;
 }
 
+.landing-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: background-color var(--motion-fast) ease-out;
+}
+
+.landing-topbar-link:hover {
+  background: var(--color-surface-raised);
+}
+
+.landing-wordmark:focus-visible,
+.landing-topbar-link:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Sections stack with generous space between them. */
 .landing-main {
   display: flex;
   flex: 1;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-6);
-  padding: var(--space-12) var(--space-4) var(--space-8);
-  text-align: center;
+  gap: var(--space-16);
+  padding: var(--space-12) 0 var(--space-16);
 }
 
 .landing-main:focus {
   outline: none;
+}
+
+/* Hero */
+.landing-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 45rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+  text-align: center;
 }
 
 .landing-title {
@@ -61,14 +97,21 @@
 .landing-tagline {
   max-width: 32rem;
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1.25rem;
+  line-height: 1.5;
   color: var(--color-text);
+}
+
+.landing-note {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text-muted);
 }
 
 .landing-actions {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   width: 100%;
   max-width: 20rem;
 }
@@ -118,6 +161,13 @@
   background: var(--color-surface-raised);
 }
 
+.landing-action[aria-disabled="true"] {
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
 .landing-error {
   max-width: 32rem;
   margin: 0;
@@ -160,48 +210,115 @@
   outline-offset: 2px;
 }
 
-.landing-how {
+/* Graveyard preview: a full-width scene with a defined height. Moon and fog sit behind it. */
+.landing-preview {
   width: 100%;
+}
+
+.landing-preview .scene {
+  min-height: 32rem;
+}
+
+/* The stones stand on the ground strip, with room below so the footer never cuts them off. */
+.landing-preview .scene-content {
+  /* Clears the moon (24px offset + 96px size) so it never sits behind a stone. */
+  padding-top: calc(var(--space-16) * 2);
+  /* Stones end on the ground strip with room to spare (at least --space-8). */
+  padding-bottom: var(--space-12);
+}
+
+.landing-stones {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: var(--space-4);
   max-width: 48rem;
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+  margin: 0 auto;
+}
+
+.landing-stones > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.landing-stones > :nth-child(3) {
+  display: none;
+}
+
+/* How it works: three equal cards, centered, never overlapping the scene above. */
+.landing-how {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
 }
 
 .landing-how-title {
-  margin: 0 0 var(--space-4);
+  margin: 0;
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--color-text);
 }
 
 .landing-steps {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: step;
 }
 
 .landing-step {
-  counter-increment: step;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
   color: var(--color-text);
 }
 
-.landing-step::before {
-  content: counter(step) ". ";
+.landing-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--color-glow);
+  border-radius: var(--radius-full);
   color: var(--color-glow);
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1;
 }
 
-.landing-footer {
-  padding: var(--space-4);
-  text-align: center;
+.landing-step-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.landing-step-text {
+  margin: 0;
   color: var(--color-text);
+}
+
+/* Footer: quiet, separated by a border and padding. */
+.landing-footer {
+  padding: var(--space-6) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  color: var(--color-text-muted);
   background: var(--color-bg);
 }
 
@@ -218,14 +335,28 @@
     font-size: 3.5rem;
   }
 
+  .landing-tagline {
+    font-size: 1.5rem;
+  }
+
   .landing-actions {
     flex-direction: row;
+    justify-content: center;
     max-width: none;
     width: auto;
   }
+}
+
+@media (min-width: 768px) {
+  .landing-topbar-inner {
+    padding: var(--space-3) var(--space-8);
+  }
 
   .landing-steps {
-    flex-direction: row;
-    justify-content: space-between;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .landing-how {
+    padding: 0 var(--space-8);
   }
 }

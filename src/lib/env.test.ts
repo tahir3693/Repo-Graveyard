@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readAuthEnv, readDemoConfig } from "@/lib/env";
+import { isAuthConfigured, readAuthEnv, readDemoConfig } from "@/lib/env";
 
 const validAuth = { GITHUB_ID: "id", GITHUB_SECRET: "secret", AUTH_SECRET: "auth" };
 
@@ -64,5 +64,14 @@ describe("readDemoConfig", () => {
     expect(readDemoConfig({ GITHUB_DEMO_USERNAME: "a" })?.username).toBe("a");
     const max = "a".repeat(39);
     expect(readDemoConfig({ GITHUB_DEMO_USERNAME: max })?.username).toBe(max);
+  });
+});
+
+describe("isAuthConfigured", () => {
+  it("is true only when all three auth variables are set", () => {
+    expect(isAuthConfigured(validAuth)).toBe(true);
+    expect(isAuthConfigured({})).toBe(false);
+    expect(isAuthConfigured({ ...validAuth, GITHUB_ID: "  " })).toBe(false);
+    expect(isAuthConfigured({ ...validAuth, AUTH_SECRET: undefined })).toBe(false);
   });
 });

@@ -155,6 +155,17 @@ describe("handleIssue demo mode", () => {
     expect(h.posts).toHaveLength(0);
     expect(h.sessionReads.count).toBe(0);
   });
+
+  it("still returns 403 demo_mode when a signed-in session exists, and exposes no token", async () => {
+    const h = makeHarness({ session: { login: "Octocat", accessToken: TOKEN } });
+    const res = await handleIssue(h.deps, post({ ...GOOD, demo: true }));
+    expect(res.status).toBe(403);
+    const text = await res.text();
+    expect(JSON.parse(text)).toMatchObject({ error: { code: "demo_mode" } });
+    expect(text).not.toContain(TOKEN);
+    expect(h.posts).toHaveLength(0);
+    expect(h.sessionReads.count).toBe(0);
+  });
 });
 
 describe("handleIssue invalid input", () => {

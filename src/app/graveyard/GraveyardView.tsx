@@ -2,16 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GraveDrawer } from "@/components/GraveDrawer";
+import { GraveyardError } from "@/components/GraveyardError";
 import { GraveyardScene } from "@/components/GraveyardScene";
 import { ResurrectArea } from "@/components/ResurrectArea";
 import { Tombstone } from "@/components/Tombstone";
-import { fileIssue, resurrectRepo, scanRepos } from "@/lib/graveyard/client";
+import {
+  fileIssue,
+  GraveyardRequestError,
+  resurrectRepo,
+  scanRepos,
+} from "@/lib/graveyard/client";
 import { buildGraveEntries, countAlive, type GraveEntry } from "@/lib/graveyard/tombstones";
 
 type ViewState =
   | { phase: "loading" }
-  | { phase: "error" }
-  | { phase: "ready"; entries: GraveEntry[] };
+  | { phase: "error"; code: string | null }
+  | { phase: "ready"; entries: GraveEntry[]; sampleData: boolean };
 
 export interface GraveyardViewProps {
   demo: boolean;
@@ -33,10 +39,17 @@ export function GraveyardView({ demo }: GraveyardViewProps) {
     scanRepos({ demo, signal: controller.signal })
       .then((scan) => {
         // The browser clock is read here, outside scoring, and passed in as `now`.
-        setState({ phase: "ready", entries: buildGraveEntries(scan.repos, new Date()) });
+        setState({
+          phase: "ready",
+          entries: buildGraveEntries(scan.repos, new Date()),
+          sampleData: scan.sampleData === true,
+        });
       })
-      .catch(() => {
-        if (!controller.signal.aborted) setState({ phase: "error" });
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        // Keep only the typed code. Nothing else from the failure reaches the page.
+        const code = error instanceof GraveyardRequestError ? error.code : null;
+        setState({ phase: "error", code });
       });
     return () => controller.abort();
   }, [demo, attempt]);
@@ -72,21 +85,11 @@ export function GraveyardView({ demo }: GraveyardViewProps) {
 
   if (state.phase === "error") {
     return (
-      <div className="graveyard-error" role="alert">
-        <h2 className="graveyard-error-title" tabIndex={-1} ref={errorRef}>
-          The graveyard gates are stuck
-        </h2>
-        <p className="graveyard-error-text">
-          The repos could not be read this time. They are only resting. Try again in a moment.
-        </p>
-        <button type="button" className="graveyard-button" onClick={retry}>
-          Try again
-        </button>
-      </div>
+      <GraveyardError code={state.code} demo={demo} onRetry={retry} titleRef={errorRef} />
     );
   }
 
-  const { entries } = state;
+  const { entries, sampleData } = state;
 
   if (entries.length === 0) {
     return (
@@ -100,6 +103,11 @@ export function GraveyardView({ demo }: GraveyardViewProps) {
 
   return (
     <>
+      {sampleData ? (
+        <p className="graveyard-sample-note" role="status">
+          Showing sample repos
+        </p>
+      ) : null}
       <GraveyardScene alive={countAlive(entries)} total={entries.length}>
         <ul className="graveyard-stones" aria-label="Graveyard" ref={listRef}>
           {entries.map(({ repo, tombstone }) => (

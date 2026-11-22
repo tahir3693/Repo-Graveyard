@@ -1,7 +1,9 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { NotSignedIn } from "@/components/NotSignedIn";
 import { SkipLink } from "@/components/SkipLink";
 import { readSessionUser } from "@/lib/auth/server-session";
+import { isAuthConfigured } from "@/lib/env";
 import { GraveyardView } from "./GraveyardView";
 import "./graveyard.css";
 
@@ -21,8 +23,10 @@ async function GraveyardForRequest({ searchParams }: { searchParams: SearchParam
   const { demo } = await searchParams;
   if (demo === "1") return <GraveyardView demo />;
   // Own graveyard: the session decides. The scan route re-checks the token itself.
-  const user = await readSessionUser();
-  if (user === null) return <NotSignedIn />;
+  // connection() keeps the Auth.js session read (random values) out of prerender.
+  await connection();
+  const user = await readSessionUser(process.env);
+  if (user === null) return <NotSignedIn signInConfigured={isAuthConfigured(process.env)} />;
   return <GraveyardView demo={false} />;
 }
 

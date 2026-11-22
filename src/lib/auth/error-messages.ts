@@ -4,6 +4,9 @@ export const SIGN_IN_CONFIG_MESSAGE =
   "The gate is not set up yet, so sign-in is resting for now. The demo graveyard still works.";
 export const SIGN_IN_CALLBACK_MESSAGE =
   "The spirits lost the way back from GitHub. Nothing was saved. Try signing in again.";
+/** Shown next to the Sign in button when the server has no GitHub OAuth settings. */
+export const SIGN_IN_NOT_SET_UP_MESSAGE =
+  "GitHub sign-in is not set up on this server yet. Try the demo graveyard.";
 export const SIGN_IN_FAILED_MESSAGE = "Sign-in failed. You can try again.";
 
 /**
