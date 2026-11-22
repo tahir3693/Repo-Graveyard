@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import type { DrawerFact } from "@/lib/graveyard/drawer-facts";
 import { STATUS_LABEL, StatusIcon, type TombstoneStatus } from "./Tombstone";
 import "./GraveDrawer.css";
 
@@ -10,6 +11,8 @@ export interface GraveDrawerProps {
   score: number;
   causeLabel: string;
   epitaph: string;
+  /** Last commit, stars, CI, dependencies and open issues, as plain text. */
+  facts: readonly DrawerFact[];
   /** Shown as a link only when it is an https://github.com URL. */
   url: string;
   /** Called on Escape, the Close button and a backdrop click. The parent restores focus. */
@@ -41,6 +44,7 @@ export function GraveDrawer({
   score,
   causeLabel,
   epitaph,
+  facts,
   url,
   onClose,
   children,
@@ -87,14 +91,31 @@ export function GraveDrawer({
     const first = items[0];
     const last = items[items.length - 1];
     const active = document.activeElement;
-    const outside = !(active instanceof Node) || !items.includes(active as HTMLElement);
-    if (event.shiftKey && (active === first || outside)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && (active === last || outside)) {
-      event.preventDefault();
-      first.focus();
+    const listed = active instanceof HTMLElement && items.includes(active);
+
+    // On a listed control, the browser handles every step except wrapping at the ends.
+    if (listed) {
+      if (event.shiftKey && active === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+      return;
     }
+
+    // Focus is on something unlisted (the plan heading has tabindex -1) or outside the
+    // dialog. Continue from its position in the page, wrapping at the ends.
+    event.preventDefault();
+    if (!(active instanceof Node) || !dialog.contains(active)) {
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+    const after = items.filter((el) => active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const before = items.filter((el) => active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING);
+    const target = event.shiftKey ? before[before.length - 1] ?? last : after[0] ?? first;
+    target.focus();
   };
 
   // A click on the dialog element itself (not its content) is a click on the backdrop.
@@ -113,34 +134,40 @@ export function GraveDrawer({
       onKeyDown={onKeyDown}
       onClick={onClick}
     >
-      <div className="drawer-body">
+      <div className="drawer-top">
         <div className="drawer-header">
           <h2 id={headingId} ref={headingRef} tabIndex={-1} className="drawer-title">
             {name}
           </h2>
           <button type="button" className="drawer-close" onClick={onClose}>
+            <span aria-hidden="true">{"\u00d7"}</span>
             Close
           </button>
         </div>
 
-        <dl className="drawer-facts">
-          <div className="drawer-fact">
-            <dt>Status</dt>
-            <dd
-              className={`drawer-status ${failing ? "drawer-status-failing" : "drawer-status-alive"}`}
-            >
-              <StatusIcon status={status} />
-              {STATUS_LABEL[status]}
-            </dd>
-          </div>
-          <div className="drawer-fact">
-            <dt>Death score</dt>
-            <dd>{score} of 100</dd>
-          </div>
-          <div className="drawer-fact">
-            <dt>Cause of death</dt>
-            <dd>{causeLabel}</dd>
-          </div>
+        <p className="drawer-badges">
+          <span
+            className={`drawer-status ${failing ? "drawer-status-failing" : "drawer-status-alive"}`}
+          >
+            <StatusIcon status={status} />
+            {STATUS_LABEL[status]}
+          </span>
+          <span className="drawer-score">Death score {score} of 100</span>
+        </p>
+
+        <p className="drawer-cause">
+          <span className="drawer-cause-label">Cause of death:</span> {causeLabel}
+        </p>
+      </div>
+
+      <div className="drawer-body">
+        <dl className="drawer-facts" aria-label="Repo facts">
+          {facts.map((fact) => (
+            <div key={fact.key} className="drawer-fact">
+              <dt>{fact.label}</dt>
+              <dd className={fact.tone === "warn" ? "drawer-fact-warn" : undefined}>{fact.value}</dd>
+            </div>
+          ))}
         </dl>
 
         <p className="drawer-epitaph">{epitaph}</p>
@@ -152,7 +179,6 @@ export function GraveDrawer({
         ) : null}
 
         {children}
-      </div>
-    </dialog>
+      </div>    </dialog>
   );
 }

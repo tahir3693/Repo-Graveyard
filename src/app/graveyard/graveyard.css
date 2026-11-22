@@ -4,32 +4,193 @@
   flex: 1;
   flex-direction: column;
   gap: var(--space-6);
-  padding: var(--space-8) 0 0;
+  padding: var(--space-4) 0 var(--space-12);
 }
 
 .graveyard-main:focus {
   outline: none;
 }
 
+/* Header: back link and session on one row, then the h1, summary and badge. */
+.graveyard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  text-align: center;
+}
+
+.graveyard-header-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 72rem;
+}
+
+.graveyard-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--color-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.graveyard-back:hover {
+  color: var(--color-glow);
+}
+
+.graveyard-back:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.graveyard-session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+}
+
 .graveyard-title {
   margin: 0;
-  padding: 0 var(--space-4);
   font-family: var(--font-display);
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.2;
-  text-align: center;
   color: var(--color-text);
 }
 
+.graveyard-summary {
+  max-width: 40rem;
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.125rem;
+}
+
+.graveyard-badge {
+  margin: 0;
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--color-glow);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-glow);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Controls: filter chips wrap on small screens, the sort select sits beside or below. */
+.graveyard-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.graveyard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+/* The border is the visible edge of the control, so it uses the 8.5:1 muted text token. */
+.graveyard-chip,
+.graveyard-select {
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) ease-out;
+}
+
+.graveyard-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.graveyard-chip:hover,
+.graveyard-select:hover {
+  background: var(--color-surface-raised);
+}
+
+/* Pressed state: filled and marked with a check mark (see the chip markup), so it never relies on color alone. */
+.graveyard-chip[aria-pressed="true"] {
+  border-color: var(--color-glow);
+  background: var(--color-glow);
+  color: var(--color-bg);
+}
+
+.graveyard-chip:focus-visible,
+.graveyard-select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.graveyard-chip-count {
+  font-weight: 400;
+}
+
+.graveyard-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text);
+}
+
+.graveyard-select {
+  border-radius: var(--radius-md);
+}
+
+.graveyard-results {
+  margin: 0;
+  padding: 0 var(--space-4);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* Scene: the grid sits on top of the sky, moon, fog and ground. */
+.graveyard-scene-wrap {
+  width: 100%;
+}
+
+.graveyard-scene-wrap .scene {
+  min-height: 32rem;
+}
+
+.graveyard-scene-wrap .scene-content {
+  /* Clears the moon (24px offset + 96px size) so it never hides a stone. */
+  padding-top: calc(var(--space-16) * 2);
+  padding-bottom: var(--space-16);
+}
+
+/* 1 column on phones, 2 on tablets, 3 on desktop, 4 on wide desktop. Equal gaps. */
 .graveyard-stones {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 16rem);
+  gap: var(--space-6);
+  justify-content: center;
   justify-items: center;
   margin: 0 auto;
   padding: 0;
-  max-width: 64rem;
+  max-width: 72rem;
   list-style: none;
 }
 
@@ -39,6 +200,69 @@
   width: 100%;
 }
 
+.graveyard-stone .tombstone {
+  max-width: 16rem;
+}
+
+/* Loading skeleton: token colors, gentle pulse. */
+.graveyard-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding: 0 var(--space-4);
+}
+
+.graveyard-loading {
+  margin: 0;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.graveyard-skeleton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 16rem;
+  min-height: 15rem;
+  padding: var(--space-6) var(--space-4) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tomb);
+  background: var(--color-surface-raised);
+  animation: graveyard-pulse var(--motion-slow) ease-in-out infinite alternate;
+}
+
+.graveyard-skeleton-bar {
+  width: 80%;
+  height: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-border);
+}
+
+.graveyard-skeleton-bar-title {
+  width: 60%;
+  height: var(--space-6);
+}
+
+.graveyard-skeleton-bar-chip {
+  width: 40%;
+}
+
+.graveyard-skeleton-bar-short {
+  width: 50%;
+}
+
+.graveyard-message.graveyard-empty {
+  flex-direction: column;
+}
+
+.graveyard-empty-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
 .graveyard-message,
 .graveyard-error {
   display: flex;
@@ -57,16 +281,6 @@
 .graveyard-message {
   flex-direction: row;
   justify-content: center;
-}
-
-.graveyard-sample-note {
-  align-self: center;
-  margin: 0;
-  padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-glow);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-  color: var(--color-text);
 }
 
 .graveyard-message-icon {
@@ -133,18 +347,37 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .graveyard-skeleton,
+  .graveyard-message-icon {
+    animation: none;
+  }
+}
+
 @media (min-width: 640px) {
   .graveyard-stones {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 16rem));
   }
 
   .graveyard-title {
     font-size: 2.5rem;
   }
+
+  .graveyard-header,
+  .graveyard-controls,
+  .graveyard-skeleton-wrap {
+    padding: 0 var(--space-8);
+  }
 }
 
 @media (min-width: 1024px) {
   .graveyard-stones {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 16rem));
+  }
+}
+
+@media (min-width: 1280px) {
+  .graveyard-stones {
+    grid-template-columns: repeat(4, minmax(0, 16rem));
   }
 }

@@ -54,8 +54,7 @@ test("demo mode: File this issue is look-only and sends no request", async ({ pa
   expect(describedBy).toBeTruthy();
   const note = page.locator(`[id="${describedBy}"]`);
   await expect(note).toBeVisible();
-  await expect(note).toContainText("Demo graveyards are look-only");
-  await expect(note).toContainText("Sign in with GitHub to file this issue");
+  await expect(note).toContainText("Filing issues is turned off in the demo.");
 
   // Reachable by keyboard.
   await button.focus();

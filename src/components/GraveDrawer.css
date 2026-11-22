@@ -1,5 +1,6 @@
 /* Detail drawer. Tokens only: see .kiro/steering/design-system.md. Mobile first:
-   a bottom sheet below 768px, a 420px right-side panel from 768px. */
+   a bottom sheet that fills most of the screen below 768px, a right-side drawer from 768px.
+   The top block (name, close, status, cause) stays put. Only .drawer-body scrolls. */
 .drawer {
   position: fixed;
   top: auto;
@@ -8,7 +9,9 @@
   left: 0;
   width: 100%;
   max-width: 100%;
-  max-height: 85vh;
+  height: 90vh;
+  height: 90dvh;
+  max-height: 90dvh;
   margin: 0;
   padding: 0;
   border: 1px solid var(--color-text-muted);
@@ -22,7 +25,6 @@
   box-shadow: 0 0 var(--space-12) var(--color-glow-soft);
 }
 
-/* Only .drawer-body scrolls. The dialog itself never overflows, so there is one scrollbar. */
 .drawer[open] {
   display: flex;
   flex-direction: column;
@@ -30,18 +32,18 @@
   animation: drawer-in-up var(--motion-base) ease-out;
 }
 
+/* Dimmed backdrop: the page color at 80%, so the page behind stays visible but quiet. */
 .drawer::backdrop {
   background: color-mix(in srgb, var(--color-bg) 80%, transparent);
 }
 
-.drawer-body {
+.drawer-top {
   display: flex;
+  flex: none;
   flex-direction: column;
-  gap: var(--space-4);
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: var(--space-6) var(--space-4) var(--space-8);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .drawer-header {
@@ -52,6 +54,7 @@
 }
 
 .drawer-title {
+  min-width: 0;
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.5rem;
@@ -74,10 +77,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--space-2);
   min-width: 44px;
   min-height: 44px;
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--color-glow);
+  border: 1px solid var(--color-text-muted);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
   color: var(--color-text);
@@ -107,34 +111,23 @@
   outline-offset: 2px;
 }
 
-.drawer-facts {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
-}
-
-.drawer-fact {
+/* Status badge: a shape plus a word, so it never relies on color alone. */
+.drawer-badges {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.drawer-fact dt {
-  color: var(--color-text-muted);
-}
-
-.drawer-fact dd {
+  align-items: center;
+  gap: var(--space-3);
   margin: 0;
-  font-weight: 600;
 }
 
 .drawer-status {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+  font-weight: 600;
 }
 
 .drawer-status .tombstone-status-icon {
@@ -148,6 +141,65 @@
 }
 
 .drawer-status-failing {
+  color: var(--color-ember);
+}
+
+.drawer-score {
+  color: var(--color-text-muted);
+}
+
+.drawer-cause {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.drawer-cause-label {
+  color: var(--color-text-muted);
+}
+
+.drawer-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-height: 0;
+  padding: var(--space-6) var(--space-4) var(--space-12);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Facts row: compact tiles that wrap, so nothing is cut off at any width. */
+.drawer-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.drawer-fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+}
+
+.drawer-fact dt {
+  color: var(--color-text-muted);
+}
+
+.drawer-fact dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Warning values are already spelled out in words (Failing, Outdated). Color is extra. */
+.drawer-fact-warn {
   color: var(--color-ember);
 }
 
@@ -185,9 +237,10 @@
     right: 0;
     bottom: 0;
     left: auto;
-    width: 420px;
+    width: 28rem;
     height: 100vh;
-    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border: 1px solid var(--color-text-muted);
     border-right: 0;
     border-radius: var(--radius-lg) 0 0 var(--radius-lg);
@@ -197,7 +250,23 @@
     animation-name: drawer-in-side;
   }
 
+  .drawer-top {
+    padding: var(--space-6) var(--space-6) var(--space-4);
+  }
+
   .drawer-body {
-    padding: var(--space-8) var(--space-6);
+    padding: var(--space-6) var(--space-6) var(--space-12);
+  }
+}
+
+/* Reduced motion: the drawer appears at once. */
+@media (prefers-reduced-motion: reduce) {
+  .drawer[open] {
+    animation: none;
+  }
+
+  .drawer-close,
+  .drawer-link {
+    transition: none;
   }
 }

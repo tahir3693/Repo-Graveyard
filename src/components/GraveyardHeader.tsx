@@ -1,0 +1,37 @@
+import Link from "next/link";
+import { SignOutButton } from "@/components/SignOutButton";
+
+export type GraveyardBadge = "Demo" | "Sample repos";
+
+export interface GraveyardHeaderProps {
+  /** One-line summary built from the real data, or null while loading or on error. */
+  summary: string | null;
+  /** Shown when demo mode or bundled sample data is in use. */
+  badge: GraveyardBadge | null;
+  /** The signed-in GitHub login, or null. Only a login is needed, never a token. */
+  login: string | null;
+}
+
+/** The page header: back link, sign out, the one h1, the summary line and the badge. */
+export function GraveyardHeader({ summary, badge, login }: GraveyardHeaderProps) {
+  return (
+    <header className="graveyard-header">
+      <div className="graveyard-header-bar">
+        <Link href="/" className="graveyard-back">
+          <span aria-hidden="true">{"\u2190"} </span>Back to home
+        </Link>
+        {login === null ? null : (
+          <div className="graveyard-session">
+            <span className="graveyard-session-text">
+              Signed in as <strong>{login}</strong>
+            </span>
+            <SignOutButton className="graveyard-chip" />
+          </div>
+        )}
+      </div>
+      <h1 className="graveyard-title">The Graveyard</h1>
+      {summary === null ? null : <p className="graveyard-summary">{summary}</p>}
+      {badge === null ? null : <p className="graveyard-badge">{badge}</p>}
+    </header>
+  );
+}

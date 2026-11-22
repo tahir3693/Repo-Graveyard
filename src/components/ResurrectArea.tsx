@@ -2,15 +2,17 @@
 
 import { MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useId, useReducer, useRef, useState } from "react";
+import { copyToClipboard } from "@/lib/graveyard/clipboard";
 import type { FileIssueResult, IssueErrorCode } from "@/lib/graveyard/client";
+import { buildIssueText } from "@/lib/graveyard/issue-text";
 import { safeIssueLink } from "@/lib/graveyard/issue-link";
 import {
-  EFFORT_LABEL,
   initialResurrectState,
   resurrectReducer,
   type RevivalPlanData,
 } from "@/lib/graveyard/resurrect-state";
 import { RESURRECT_TIMING } from "@/lib/graveyard/resurrect-timing";
+import { ResurrectPlan, type CopyState, type IssueState } from "./ResurrectPlan";
 import "./ResurrectArea.css";
 
 export interface ResurrectAreaProps {
@@ -23,8 +25,6 @@ export interface ResurrectAreaProps {
   onFileIssue: (issue: { title: string; body: string }) => Promise<FileIssueResult>;
 }
 
-const DEMO_ISSUE_NOTE =
-  "Demo graveyards are look-only. Sign in with GitHub to file this issue on your own repo.";
 const ISSUE_GENERIC =
   "GitHub would not take the issue. Check the repo's issue list before trying again.";
 const ISSUE_CHECK_LIST =
@@ -57,12 +57,6 @@ export function issueErrorText(code: IssueErrorCode, retryAfterSeconds?: number)
   }
 }
 
-type IssueState =
-  | { phase: "idle" }
-  | { phase: "pending" }
-  | { phase: "filed"; url: string | null }
-  | { phase: "error"; text: string };
-
 const ms = (value: number) => value / 1000;
 
 /**
@@ -84,12 +78,15 @@ export function ResurrectArea({
   const planHeading = useRef<HTMLHeadingElement>(null);
   const [issue, setIssue] = useState<IssueState>({ phase: "idle" });
   const filing = useRef(false);
-  const demoNoteId = useId();
+  const idPrefix = useId();
+  const [copy, setCopy] = useState<CopyState>("idle");
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     mounted.current = true;
     return () => {
       mounted.current = false;
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
     };
   }, []);
 
@@ -110,6 +107,17 @@ export function ResurrectArea({
     } catch {
       if (mounted.current) dispatch({ type: "fail" });
     }
+  };
+
+  const copyIssue = async (plan: RevivalPlanData) => {
+    const ok = await copyToClipboard(buildIssueText(plan.issueTitle, plan.issueBody));
+    if (!mounted.current) return;
+    setCopy(ok ? "copied" : "failed");
+    if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+    // The "Copied" label is a confirmation, so it goes back to "Copy issue" after a moment.
+    copyTimer.current = setTimeout(() => {
+      if (mounted.current) setCopy("idle");
+    }, 2500);
   };
 
   const fileIssueNow = async (plan: RevivalPlanData) => {
@@ -210,7 +218,7 @@ export function ResurrectArea({
           // while the request runs. aria-disabled (not disabled) keeps it focusable.
           <button
             type="button"
-            className="resurrect-button"
+            className="resurrect-button resurrect-button-primary"
             aria-disabled={loading ? "true" : undefined}
             onClick={start}
           >
@@ -222,17 +230,22 @@ export function ResurrectArea({
           </button>
         ) : null}
 
-        {loading ? (
-          <p className="resurrect-note" role="status">
-            <svg
-              className="resurrect-icon"
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-            >
-              <circle cx="8" cy="8" r="6" />
-            </svg>
-            The fog is gathering. Reading the signs of {repoName}…
+        {state.phase === "idle" ? (
+          <p className="resurrect-note">
+            Get a revival plan and a ready-to-file issue for {repoName}.
           </p>
+        ) : null}
+
+        {loading ? (
+          <div className="resurrect-loading">
+            {/* A steady, slow sweep: transform only, one pass every 2.4 seconds. */}
+            <div className="resurrect-progress" aria-hidden="true">
+              <span className="resurrect-progress-bar" />
+            </div>
+            <p className="resurrect-note" role="status">
+              The fog is gathering. Reading the signs of {repoName}…
+            </p>
+          </div>
         ) : null}
 
         {state.phase === "error" ? (
@@ -277,81 +290,16 @@ export function ResurrectArea({
                     }
               }
             >
-              <h3
-                className="resurrect-plan-title"
-                tabIndex={-1}
-                ref={planHeading}
-              >
-                Revival plan
-              </h3>
-              <dl className="resurrect-plan-list">
-                <dt>Diagnosis</dt>
-                <dd>{state.plan.diagnosis}</dd>
-                <dt>Smallest next step</dt>
-                <dd>{state.plan.smallestNextStep}</dd>
-                <dt>Effort</dt>
-                <dd>{EFFORT_LABEL[state.plan.effort]}</dd>
-              </dl>
-              <section className="resurrect-issue" aria-label="Issue to file">
-                <h4 className="resurrect-issue-heading">Issue title</h4>
-                <p className="resurrect-issue-title">{state.plan.issueTitle}</p>
-                <h4 className="resurrect-issue-heading">Issue body</h4>
-                <div
-                  className="resurrect-issue-body"
-                  role="region"
-                  aria-label="Issue body, read-only preview"
-                  tabIndex={0}
-                >
-                  {state.plan.issueBody}
-                </div>
-                {issue.phase === "filed" ? (
-                  <p className="resurrect-issue-done" role="status">
-                    Issue filed. This repo has a pulse again.
-                    {issue.url !== null ? (
-                      <>
-                        {" "}
-                        <a
-                          className="resurrect-issue-link"
-                          href={issue.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View the issue on GitHub
-                        </a>
-                      </>
-                    ) : null}
-                  </p>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className="resurrect-button"
-                      aria-disabled={demo || issue.phase === "pending" ? "true" : undefined}
-                      aria-describedby={demo ? demoNoteId : undefined}
-                      onClick={() => fileIssueNow(state.plan)}
-                    >
-                      File this issue
-                    </button>
-                    {demo ? (
-                      <p id={demoNoteId} className="resurrect-note">
-                        {DEMO_ISSUE_NOTE}
-                      </p>
-                    ) : null}
-                    <p
-                      className="resurrect-note"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      {issue.phase === "pending" ? "Filing\u2026" : null}
-                    </p>
-                    {issue.phase === "error" ? (
-                      <p className="resurrect-issue-error" role="alert">
-                        {issue.text}
-                      </p>
-                    ) : null}
-                  </>
-                )}
-              </section>
+              <ResurrectPlan
+                plan={state.plan}
+                demo={demo}
+                issue={issue}
+                copy={copy}
+                idPrefix={idPrefix}
+                headingRef={planHeading}
+                onCopy={() => copyIssue(state.plan)}
+                onFile={() => fileIssueNow(state.plan)}
+              />
             </motion.div>
           </>
         ) : null}
