@@ -1,14 +1,16 @@
 "use client";
 
-import { signIn } from "next-auth/react";
+import { startGitHubSignIn } from "@/lib/auth/client-actions";
 
-export function SignInButton() {
+export interface SignInButtonProps {
+  className?: string;
+}
+
+export function SignInButton({
+  className = "landing-action landing-action-primary",
+}: SignInButtonProps) {
   return (
-    <button
-      type="button"
-      className="landing-action landing-action-primary"
-      onClick={() => void signIn("github")}
-    >
+    <button type="button" className={className} onClick={() => startGitHubSignIn()}>
       Sign in with GitHub
     </button>
   );

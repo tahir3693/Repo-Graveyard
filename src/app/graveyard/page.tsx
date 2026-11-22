@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { NotSignedIn } from "@/components/NotSignedIn";
 import { SkipLink } from "@/components/SkipLink";
+import { readSessionUser } from "@/lib/auth/server-session";
 import { GraveyardView } from "./GraveyardView";
 import "./graveyard.css";
 
@@ -17,7 +19,11 @@ function LoadingMessage() {
 /** Reads the request-time `demo` param inside Suspense, so the shell above stays static. */
 async function GraveyardForRequest({ searchParams }: { searchParams: SearchParams }) {
   const { demo } = await searchParams;
-  return <GraveyardView demo={demo === "1"} />;
+  if (demo === "1") return <GraveyardView demo />;
+  // Own graveyard: the session decides. The scan route re-checks the token itself.
+  const user = await readSessionUser();
+  if (user === null) return <NotSignedIn />;
+  return <GraveyardView demo={false} />;
 }
 
 export default function GraveyardPage({ searchParams }: { searchParams: SearchParams }) {

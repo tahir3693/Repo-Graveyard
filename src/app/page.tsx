@@ -1,7 +1,10 @@
+import { Suspense } from "react";
 import { GraveyardScene } from "@/components/GraveyardScene";
-import { SignInButton } from "@/components/SignInButton";
+import { LandingActions } from "@/components/LandingActions";
 import { SkipLink } from "@/components/SkipLink";
 import { Tombstone } from "@/components/Tombstone";
+import { readAuthErrorMessage } from "@/lib/auth/error-messages";
+import { readSessionUser } from "@/lib/auth/server-session";
 import "./landing.css";
 
 const STEPS = [
@@ -10,7 +13,15 @@ const STEPS = [
   "Get a revival plan",
 ];
 
-export default function Home() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+/** Reads the session and the `error` param per request, inside Suspense. */
+async function LandingActionsForRequest({ searchParams }: { searchParams: SearchParams }) {
+  const [{ error }, user] = await Promise.all([searchParams, readSessionUser()]);
+  return <LandingActions login={user?.login ?? null} errorMessage={readAuthErrorMessage(error)} />;
+}
+
+export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
       <SkipLink targetId="main" />
@@ -48,16 +59,9 @@ export default function Home() {
           <p className="landing-tagline">
             Find your dead repos and get a plan to revive them.
           </p>
-          <div className="landing-actions">
-            <SignInButton />
-            {/* A GET form submits to /graveyard?demo=1 with no client JavaScript. */}
-            <form action="/graveyard" method="get" className="landing-demo-form">
-              <input type="hidden" name="demo" value="1" />
-              <button type="submit" className="landing-action landing-action-secondary">
-                Try demo graveyard
-              </button>
-            </form>
-          </div>
+          <Suspense fallback={<LandingActions login={null} errorMessage={null} />}>
+            <LandingActionsForRequest searchParams={searchParams} />
+          </Suspense>
           <section aria-labelledby="how-it-works" className="landing-how">
             <h2 id="how-it-works" className="landing-how-title">
               How it works
