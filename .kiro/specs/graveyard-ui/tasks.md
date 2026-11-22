@@ -27,6 +27,7 @@ Assumptions to verify during implementation (do not skip):
     - Run `npm run typecheck` to confirm the upstream imports resolve.
     - _Requirements: 1.1, 1.9_
 
+    - Note: `GraveEntry` in `types.ts` (over `RepoHealth`) is not used by the app yet. `tombstones.ts` defines its own `GraveEntry` over `ScannedRepo`.
   - [ ] 1.2 Add design tokens, fonts and the motion provider
     - Rewrite `src/app/globals.css` with the palette in `@theme static`, cleared default color, radius and spacing namespaces, spacing and motion variables on `:root`, `color-scheme: dark`, base body styles (16px, line height 1.5), the global `:focus-visible` rule (2px, offset 2px, `--color-focus`), and the `control` utility class (44px minimum size, `--color-text-muted` border).
     - Map `--font-display` and `--font-body` in `@theme inline` from `--font-cinzel` and `--font-inter`.
@@ -40,11 +41,12 @@ Assumptions to verify during implementation (do not skip):
     - _Requirements: 19.8, 20.1, 20.13, 20.14_
 
 - [ ] 2. Pure Graveyard_Logic
-  - [ ] 2.1 Implement entries and status helpers
+  - [x] 2.1 Implement entries and status helpers
     - Create `src/lib/graveyard/entries.ts` (`buildGraveEntries`) and `src/lib/graveyard/status.ts` (`STATUSES`, `statusLabel`, `countByStatus`, `formatSummary`).
     - Write unit tests: empty input, order preserved, `scoreRepo` result equality with a fixed `now`, zero counts, summary string format.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 8.1, 8.2, 8.3_
 
+    - Note: Differs: built as `buildGraveEntries` in `src/lib/graveyard/tombstones.ts`, `countByStatus`, `summaryText` and `STATUS_ORDER` in `view.ts`, and `STATUS_LABEL` in `src/components/Tombstone.tsx`. Tested in `tombstones.test.ts` and `view.test.ts`.
   - [ ] 2.2 Write property tests for entries and counts
     - **Property 1: Building entries preserves the repos and applies the scoring function**
     - **Property 2: Status counts are exact**
@@ -190,10 +192,11 @@ Assumptions to verify during implementation (do not skip):
     - Create `src/app/graveyard/page.tsx` (default export, server): "Skip to graveyard" link as the first focusable element, home link, `main#graveyard-main` with `tabIndex={-1}`, one `h1#page-heading` with `tabIndex={-1}`, and `GraveyardRoute` inside `<Suspense fallback={<LoadingState />}>` that awaits `searchParams` and uses `parseDemoFlag`. Create `src/app/graveyard/error.tsx` with the generic paused message and a reset button.
     - _Requirements: 3.1, 3.2, 17.8, 17.9, 17.10_
 
-  - [ ] 6.3 Build the landing route
+  - [x] 6.3 Build the landing route
     - Replace `src/app/page.tsx` (default export) with `LandingHero` and, inside `<Suspense>`, `LandingActionsRoute` that awaits `searchParams`, calls `classifySignInError` and `readAuthEnv(process.env)` per request, and renders `LandingActions`.
     - _Requirements: 2.1, 2.2, 2.3, 2.8, 2.9_
 
+    - Note: Differs: `src/app/page.tsx` has the hero inline (no `LandingHero`), uses `readAuthErrorMessage` instead of `classifySignInError`, and `isAuthConfigured` (which calls `readAuthEnv`) per request. It also calls `await connection()` so the session read runs at request time.
 - [ ] 7. Checkpoint - Ensure all tests pass
   - Run `npm run typecheck`, `npm run lint`, `npm run test` and `npm run build`. Ensure all tests pass, ask the user if questions arise.
 
