@@ -5,9 +5,9 @@
 export const RESURRECTION_LIMITS = {
   GITHUB_TIMEOUT_MS: 10_000,
   CONTEXT_DEADLINE_MS: 10_000,
-  LLM_TIMEOUT_MS: 25_000,
+  LLM_TIMEOUT_MS: 7_500,
   LLM_MAX_ATTEMPTS: 2,
-  CLIENT_TIMEOUT_MS: 65_000,
+  CLIENT_TIMEOUT_MS: 30_000,
   ISSUE_CLIENT_TIMEOUT_MS: 15_000,
   LLM_MAX_OUTPUT_TOKENS: 1_500,
   LLM_TEMPERATURE: 0.3,
@@ -41,5 +41,5 @@ export const RESURRECT_LIMIT: WindowConfig = { limit: 10, windowMs: 600_000 };
 export const DEMO_RESURRECT_LIMIT: WindowConfig = { limit: 20, windowMs: 600_000 };
 export const ISSUE_LIMIT: WindowConfig = { limit: 5, windowMs: 600_000 };
 
-export const DEFAULT_LLM_MODEL = "gemini-2.5-flash-lite";
+export const DEFAULT_LLM_MODEL = "gemini-3.5-flash-lite";
 export const FALLBACK_NAME_MAX = 60;

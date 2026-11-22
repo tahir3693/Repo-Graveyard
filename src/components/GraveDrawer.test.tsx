@@ -113,6 +113,13 @@ describe("ResurrectPlan", () => {
     expect(html).toContain('id="t-demo-note"');
   });
 
+  it("says honestly when the plan is the rule-based fallback", () => {
+    const fallback = renderToStaticMarkup(
+      <ResurrectPlan plan={{ ...PLAN, fallback: true }} demo={false} issue={{ phase: "idle" }} copy="idle" idPrefix="t" onCopy={noop} onFile={noop} />,
+    );
+    expect(fallback).toContain("Rule-based plan (the AI was unavailable)");
+    expect(plan()).not.toContain("Rule-based plan");
+  });
   it("shows a visible Copied confirmation", () => {
     const html = plan({ copy: "copied" });
     expect(html).toContain("Copied");

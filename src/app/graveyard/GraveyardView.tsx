@@ -200,7 +200,7 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
         >
           <ResurrectArea
             repoName={open.repo.name}
-            onResurrect={() => resurrectRepo(open.repo.name, { demo })}
+            onResurrect={() => resurrectRepo(open.repo.name, { demo, sample: state.sampleData })}
             demo={demo}
             onFileIssue={(issue) => fileIssue(open.repo.name, issue)}
           />

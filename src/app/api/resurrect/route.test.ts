@@ -12,7 +12,7 @@ import * as route from "./route";
 describe("resurrect route module", () => {
   it("exports exactly POST and maxDuration", () => {
     expect(Object.keys(route).sort()).toEqual(["POST", "maxDuration"]);
-    expect(route.maxDuration).toBe(70);
+    expect(route.maxDuration).toBe(30);
   });
 
   it("exports no other HTTP methods", () => {

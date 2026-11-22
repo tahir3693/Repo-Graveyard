@@ -121,6 +121,15 @@ describe("resurrectRepo", () => {
     expect(plan).toEqual(PLAN);
   });
 
+  it("marks a fallback plan so the UI can say it is rule-based", async () => {
+    const { fetch } = fakeFetch({ plan: PLAN, source: "fallback", fallbackReason: "llm_unavailable" });
+    expect(await resurrectRepo("todo-app", { demo: false }, fetch)).toEqual({ ...PLAN, fallback: true });
+  });
+  it("sends only the flag and the name for sample repos", async () => {
+    const { fetch, calls } = fakeFetch({ plan: PLAN, source: "ai" });
+    await resurrectRepo("ghost-ledger", { demo: true, sample: true }, fetch);
+    expect(sentBody(calls[0])).toEqual({ repo: "ghost-ledger", sample: true });
+  });
   it("omits demo outside demo mode", async () => {
     const { fetch, calls } = fakeFetch({ plan: PLAN, source: "fallback", fallbackReason: "llm_timeout" });
     await resurrectRepo("todo-app", { demo: false }, fetch);

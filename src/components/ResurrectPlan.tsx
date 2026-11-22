@@ -9,6 +9,7 @@ export type IssueState =
 
 export type CopyState = "idle" | "copied" | "failed";
 
+export const FALLBACK_PLAN_NOTE = "Rule-based plan (the AI was unavailable)";
 export const DEMO_ISSUE_NOTE = "Filing issues is turned off in the demo.";
 export const FILING_MESSAGE = "Filing\u2026";
 export const FILED_MESSAGE = "Issue filed. This repo has a pulse again.";
@@ -66,6 +67,7 @@ export function ResurrectPlan({
       <h3 className="resurrect-plan-title" tabIndex={-1} ref={headingRef}>
         Revival plan
       </h3>
+      {plan.fallback === true ? <p className="resurrect-note">{FALLBACK_PLAN_NOTE}</p> : null}
 
       <Block id={`${idPrefix}-diagnosis`} title="Diagnosis">
         <p className="resurrect-block-text">{plan.diagnosis}</p>

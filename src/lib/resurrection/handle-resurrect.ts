@@ -15,7 +15,8 @@ import {
   type ResurrectRequest,
 } from "./request";
 import { ResurrectSuccessSchema } from "./response";
-import { resurrect } from "./service";
+import { isSampleRepoName } from "@/lib/demo/sample-context";
+import { resurrect, resurrectSample } from "./service";
 import type { ResurrectionState } from "./state";
 
 export type ResurrectDeps = {
@@ -154,10 +155,45 @@ async function runWithActor(ctx: Ctx, actor: Actor, body: ResurrectRequest): Pro
   }
 }
 
+/**
+ * Sample repos (`sample: true`): demo only. The name must be in the bundled list. No session read,
+ * no demo config, no token and no GitHub call. Rate limit and in-flight guard match the demo path.
+ */
+async function processSample(ctx: Ctx, body: ResurrectRequest): Promise<Response> {
+  ctx.mode = "demo";
+  if (!isSampleRepoName(body.repo, ctx.now)) return failResponse(ctx, { code: "invalid_request" });
+  const { inFlight, demo } = ctx.deps.state;
+  const key = `demo:${body.repo.toLowerCase()}`;
+  if (!inFlight.acquire(key)) return failResponse(ctx, { code: "resurrect_busy" });
+  try {
+    const decision = demo.check("demo", ctx.now.getTime());
+    if (!decision.allowed) {
+      return failResponse(ctx, {
+        code: "resurrect_rate_limited",
+        retryAfterSeconds: decision.retryAfterSeconds,
+      });
+    }
+    const outcome = await resurrectSample(
+      {
+        makeLlmClient: ctx.deps.makeLlmClient,
+        config: ctx.deps.config,
+        secrets: ctx.deps.config.llmApiKey === null ? [] : [ctx.deps.config.llmApiKey],
+      },
+      { repo: body.repo, now: ctx.now },
+    );
+    const parsed = ResurrectSuccessSchema.safeParse(outcome);
+    if (!parsed.success) return failResponse(ctx, { code: "internal_error" });
+    return Response.json(parsed.data, { status: 200 });
+  } finally {
+    inFlight.release(key);
+  }
+}
+
 async function process(ctx: Ctx): Promise<Response> {
   if (!checkOrigin(ctx)) return failResponse(ctx, { code: "bad_origin" });
   const body = await readRequest(ctx.req);
   if (body === null) return failResponse(ctx, { code: "invalid_request" });
+  if (body.sample === true) return processSample(ctx, body);
   if (body.demo === true) ctx.mode = "demo";
   const resolved = await resolveActor(ctx, body);
   if ("fail" in resolved) return failResponse(ctx, resolved.fail);

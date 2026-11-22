@@ -20,6 +20,7 @@ export async function runAttempts(
   isAcceptable: (plan: RevivalPlan) => boolean = () => true,
 ): Promise<AttemptsResult> {
   let lastKind: LlmFailureKind = "unavailable";
+  // A failure with `retryable: false` (401, 403, 404, ...) ends the loop: a retry cannot help.
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     let result: LlmResult;
     try {
@@ -30,6 +31,7 @@ export async function runAttempts(
     }
     if (!result.ok) {
       lastKind = result.kind;
+      if (result.retryable === false) break;
       continue;
     }
     const parsed = parsePlan(result.text);

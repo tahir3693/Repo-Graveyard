@@ -91,7 +91,7 @@ On Windows PowerShell, use `Copy-Item .env.example .env.local`.
 | `AUTH_SECRET` | Yes | A random string that signs session cookies. Generate one with `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Yes | The app's base URL, `http://localhost:3000` for local runs. |
 | `LLM_API_KEY` | For Resurrect | A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey). Used only on the server. |
-| `LLM_MODEL` | No | A Gemini model id. Defaults to `gemini-2.5-flash-lite` when empty. |
+| `LLM_MODEL` | No | A Gemini model id. Defaults to `gemini-3.5-flash-lite` when empty. |
 | `GITHUB_DEMO_USERNAME` | For demo mode | The public GitHub username whose repos demo mode shows. |
 | `GITHUB_DEMO_TOKEN` | No | A read-only GitHub personal access token that raises rate limits for demo mode. Create one under **Settings**, **Developer settings**, **Personal access tokens**. |
 | `GITHUB_API_BASE_URL` | No | Test-only. Points GitHub calls at a local mock on a loopback address. Leave it empty. |

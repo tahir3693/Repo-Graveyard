@@ -154,16 +154,22 @@ export async function scanRepos(
  */
 export async function resurrectRepo(
   repo: string,
-  options: { demo: boolean },
+  options: { demo: boolean; sample?: boolean },
   fetchImpl: FetchLike = defaultFetch,
 ): Promise<RevivalPlanData> {
   const name = RepoNameSchema.safeParse(repo);
   if (!name.success) throw new GraveyardRequestError("invalid");
-  const body = options.demo ? { repo: name.data, demo: true } : { repo: name.data };
+  // Sample repos send the flag and the name only: never an owner, never repo content.
+  const body =
+    options.sample === true
+      ? { repo: name.data, sample: true }
+      : options.demo
+        ? { repo: name.data, demo: true }
+        : { repo: name.data };
   const json = await postJson("/api/resurrect", body, fetchImpl);
   const parsed = ResurrectResponseSchema.safeParse(json);
   if (!parsed.success) throw new GraveyardRequestError("invalid");
-  return parsed.data.plan;
+  return parsed.data.source === "fallback" ? { ...parsed.data.plan, fallback: true } : parsed.data.plan;
 }
 
 /**

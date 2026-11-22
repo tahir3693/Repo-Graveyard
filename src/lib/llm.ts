@@ -15,11 +15,11 @@ export type LlmFailureKind = "timeout" | "unavailable" | "invalid_output";
 
 export type LlmResult =
   | { ok: true; text: string }
-  | { ok: false; kind: LlmFailureKind };
+  | { ok: false; kind: LlmFailureKind; retryable?: false };
 
 type Outcome =
   | { tag: "response"; value: { text: unknown } }
-  | { tag: "rejected" }
+  | { tag: "rejected"; retryable: boolean }
   | { tag: "aborted" };
 
 function toGenerateArgs(request: LlmRequest, signal: AbortSignal): LlmGenerateArgs {
@@ -42,13 +42,26 @@ function abortPromise(signal: AbortSignal): Promise<Outcome> {
   });
 }
 
+/** The HTTP status of a provider error, or null when it has none. */
+function readStatus(error: unknown): number | null {
+  if (typeof error !== "object" || error === null || !("status" in error)) return null;
+  const status: unknown = error.status;
+  return typeof status === "number" && Number.isInteger(status) ? status : null;
+}
+
+/** Only 429 and 503 can succeed on a retry. 401, 403, 404 and other statuses cannot. */
+function isRetryableStatus(status: number | null): boolean {
+  return status === null || status === 429 || status === 503;
+}
+
 async function runGenerate(client: LlmClient, args: LlmGenerateArgs): Promise<Outcome> {
   try {
     const value = await client.generate(args);
     return { tag: "response", value };
-  } catch {
-    // The error is dropped on purpose: it may contain an API key.
-    return { tag: "rejected" };
+  } catch (error) {
+    // Only the numeric HTTP status is kept. The error itself is dropped on purpose:
+    // its message may contain an API key.
+    return { tag: "rejected", retryable: isRetryableStatus(readStatus(error)) };
   }
 }
 
@@ -81,7 +94,11 @@ export async function callLlm(
       abortPromise(controller.signal),
     ]);
     if (timedOut || outcome.tag === "aborted") return { ok: false, kind: "timeout" };
-    if (outcome.tag === "rejected") return { ok: false, kind: "unavailable" };
+    if (outcome.tag === "rejected") {
+      return outcome.retryable
+        ? { ok: false, kind: "unavailable" }
+        : { ok: false, kind: "unavailable", retryable: false };
+    }
     return readText(outcome.value);
   } finally {
     clearTimeout(timer);

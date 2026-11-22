@@ -8,7 +8,8 @@ import { scoreRepo } from "@/lib/scoring";
 
 import { runAttempts, toFallbackReason } from "./attempts";
 import type { ResurrectionConfig } from "./config";
-import { capBundle, deriveRepoHealth } from "./context";
+import { getSampleContext } from "@/lib/demo/sample-context";
+import { capBundle, deriveRepoHealth, type RawContext } from "./context";
 import { buildFallbackPlan } from "./fallback";
 import { gatherContext } from "./gather";
 import { RESURRECTION_LIMITS } from "./limits";
@@ -40,11 +41,31 @@ function planContainsSecret(plan: RevivalPlan, secrets: readonly string[]): bool
   );
 }
 
+/** Real repos: reads GitHub (GET only), then builds the plan. */
 export async function resurrect(
   deps: ResurrectServiceDeps,
   input: ResurrectInput,
 ): Promise<ResurrectOutcome> {
   const raw = await gatherContext({ request: deps.request, now: input.now }, input.owner, input.repo);
+  return planFromContext(deps, raw, input.now);
+}
+
+/** Sample repos: the context is bundled, so there is no GitHub call and no token. */
+export async function resurrectSample(
+  deps: Omit<ResurrectServiceDeps, "request">,
+  input: { repo: string; now: Date },
+): Promise<ResurrectOutcome | null> {
+  const raw = getSampleContext(input.repo, input.now);
+  return raw === null ? null : planFromContext(deps, raw, input.now);
+}
+
+/** The shared path: score, build the prompt, ask the model, fall back to the rule-built plan. */
+async function planFromContext(
+  deps: Omit<ResurrectServiceDeps, "request">,
+  raw: RawContext,
+  now: Date,
+): Promise<ResurrectOutcome> {
+  const input = { now };
   const health = deriveRepoHealth(raw, input.now);
   const tombstone = scoreRepo(health, input.now);
   const bundle = capBundle(raw, tombstone, health);

@@ -15,6 +15,8 @@ const noLineBreak = (value: string) => !/[\r\n]/.test(value);
 export const ResurrectRequestSchema = z.object({
   repo: RepoNameSchema,
   demo: z.boolean().optional(),
+  /** Demo sample repos: the server uses its bundled data for this name. No owner, no content. */
+  sample: z.boolean().optional(),
 });
 
 export type ResurrectRequest = z.infer<typeof ResurrectRequestSchema>;

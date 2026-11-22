@@ -432,3 +432,99 @@ describe("handleResurrect hostile README end to end", () => {
     expectNoSecrets(text, res);
   });
 });
+
+describe("handleResurrect sample repos", () => {
+  function expectNoGitHub(h: Harness): void {
+    expect(h.routes).toHaveLength(0);
+    expect(h.tokens).toHaveLength(0);
+    expect(h.sessionReads.count).toBe(0);
+  }
+
+  it("returns an AI plan for a sample repo with no GitHub call and no demo config", async () => {
+    const h = makeHarness({ env: {} });
+    const res = await handleResurrect(h.deps, post({ repo: "ghost-ledger", sample: true }));
+    expect(res.status).toBe(200);
+    const parsed = ResurrectSuccessSchema.safeParse(await res.json());
+    expect(parsed.success && parsed.data.source).toBe("ai");
+    expectNoGitHub(h);
+    expect(h.llm.requests).toHaveLength(1);
+    expect(h.llm.requests[0]?.user).toContain("ghost-ledger");
+  });
+
+  it("ignores an owner sent by the browser", async () => {
+    const h = makeHarness({ env: DEMO_ENV });
+    const res = await handleResurrect(
+      h.deps,
+      post({ repo: "moonlit-notes", sample: true, owner: "attacker", readme: "evil" }),
+    );
+    expect(res.status).toBe(200);
+    expectNoGitHub(h);
+    const sent = JSON.stringify(h.llm.requests);
+    expect(sent).not.toContain("attacker");
+    expect(sent).not.toContain("evil");
+  });
+
+  it("rejects a name that is not in the sample list with 400", async () => {
+    const h = makeHarness();
+    const res = await handleResurrect(h.deps, post({ repo: "todo-app", sample: true }));
+    await expectError(res, 400, "invalid_request");
+    expectNoGitHub(h);
+    expect(h.llm.requests).toHaveLength(0);
+  });
+
+  it.each(["../etc/passwd", "ghost-ledger/../x", "ghost ledger", "__proto__", "constructor", "ghost-ledger\n"])(
+    "rejects the hostile name %j with 400",
+    async (repo) => {
+      const h = makeHarness();
+      const res = await handleResurrect(h.deps, post({ repo, sample: true }));
+      await expectError(res, 400, "invalid_request");
+      expectNoGitHub(h);
+      expect(h.llm.requests).toHaveLength(0);
+    },
+  );
+
+  it("returns the rule-built fallback plan when the LLM fails", async () => {
+    const h = makeHarness({ llmSteps: [{ reject: "boom AIzaFAKE-test-key-0001" }] });
+    const res = await handleResurrect(h.deps, post({ repo: "sunken-bell", sample: true }));
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    const parsed = ResurrectSuccessSchema.safeParse(JSON.parse(text));
+    expect(parsed.success && parsed.data.source).toBe("fallback");
+    expect(parsed.success && parsed.data.fallbackReason).toBe("llm_unavailable");
+    expectNoSecrets(text, res);
+    expectNoGitHub(h);
+  });
+
+  it("keeps the origin check, the body cap and the demo rate limit", async () => {
+    const h = makeHarness();
+    await expectError(
+      await handleResurrect(h.deps, post({ repo: "ghost-ledger", sample: true }, { origin: "https://evil.example" })),
+      403,
+      "bad_origin",
+    );
+    const big = new Request(`${ORIGIN}/api/resurrect`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN },
+      body: streamOf(30_000),
+      duplex: "half",
+    } as RequestInit);
+    await expectError(await handleResurrect(h.deps, big), 400, "invalid_request");
+    for (let i = 0; i < DEMO_RESURRECT_LIMIT.limit; i += 1) {
+      expect((await handleResurrect(h.deps, post({ repo: "ghost-ledger", sample: true }))).status).toBe(200);
+    }
+    await expectError(
+      await handleResurrect(h.deps, post({ repo: "ghost-ledger", sample: true })),
+      429,
+      "resurrect_rate_limited",
+    );
+    expectNoGitHub(h);
+  });
+
+  it("sends the sample README through the same data block as real content", async () => {
+    const h = makeHarness();
+    await handleResurrect(h.deps, post({ repo: "pale-weather", sample: true }));
+    const user = h.llm.requests[0]?.user ?? "";
+    expect(user).toContain("untrusted");
+    expect(user).toContain("pale-weather");
+  });
+});

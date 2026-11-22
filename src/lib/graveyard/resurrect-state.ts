@@ -8,6 +8,8 @@ export interface RevivalPlanData {
   effort: "under 1 hour" | "a weekend" | "a week or more";
   issueTitle: string;
   issueBody: string;
+  /** Present (true) only when the rule-built fallback plan was used instead of the AI. */
+  fallback?: true;
 }
 
 export type ResurrectState =
