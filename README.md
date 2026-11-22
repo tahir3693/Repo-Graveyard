@@ -2,6 +2,8 @@
 
 Find your dead repos and get a plan to revive them.
 
+**Live demo:** [https://repo-graveyard-seven.vercel.app](https://repo-graveyard-seven.vercel.app)
+
 Repo Graveyard is a haunted web dashboard for unfinished GitHub projects. It reads your repositories, scores how abandoned each one is with fixed rules, and shows each repo as a tombstone in a graveyard scene. Open a tombstone to see its death score and cause of death, then click Resurrect. An AI writes a revival plan and a ready-to-file GitHub issue, and you can file that issue on the repo with one click. It is built for students, freelancers and hobbyists with many half-finished repos. The tone is dark humor that jokes about a repo's fate, never about you. A repo is paused, not failed.
 
 ## Screenshots
