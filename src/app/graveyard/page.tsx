@@ -6,6 +6,7 @@ import { NotSignedIn } from "@/components/NotSignedIn";
 import { SkipLink } from "@/components/SkipLink";
 import { readSessionUser } from "@/lib/auth/server-session";
 import { isAuthConfigured } from "@/lib/env";
+import { parseViewMode } from "@/lib/graveyard/view-mode";
 import { GraveyardView } from "./GraveyardView";
 import "./graveyard.css";
 
@@ -13,9 +14,10 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 /** Reads the request-time `demo` param inside Suspense, so the shell above stays static. */
 async function GraveyardForRequest({ searchParams }: { searchParams: SearchParams }) {
-  const { demo } = await searchParams;
+  const { demo, view } = await searchParams;
+  const initialView = parseViewMode(view);
   // Demo mode never reads the session (security.md, Demo mode), so it has no Sign out.
-  if (demo === "1") return <GraveyardView demo />;
+  if (demo === "1") return <GraveyardView demo initialView={initialView} />;
   // Own graveyard: the session decides. The scan route re-checks the token itself.
   // connection() keeps the Auth.js session read (random values) out of prerender.
   await connection();
@@ -28,7 +30,7 @@ async function GraveyardForRequest({ searchParams }: { searchParams: SearchParam
       </>
     );
   }
-  return <GraveyardView demo={false} login={user.login} />;
+  return <GraveyardView demo={false} login={user.login} initialView={initialView} />;
 }
 
 function LoadingShell() {

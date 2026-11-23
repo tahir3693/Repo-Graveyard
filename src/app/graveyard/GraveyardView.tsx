@@ -8,7 +8,12 @@ import { GraveyardHeader, type GraveyardBadge } from "@/components/GraveyardHead
 import { GraveyardScene } from "@/components/GraveyardScene";
 import { GraveyardSkeleton } from "@/components/GraveyardSkeleton";
 import { ResurrectArea } from "@/components/ResurrectArea";
+import { GraveyardLegend } from "@/components/GraveyardLegend";
+import { GraveyardList } from "@/components/GraveyardList";
+import { ViewToggle } from "@/components/ViewToggle";
+import { withViewMode, type GraveyardViewMode } from "@/lib/graveyard/view-mode";
 import { Tombstone } from "@/components/Tombstone";
+import { buildStoneVocab } from "@/lib/graveyard/stone-vocab";
 import {
   fileIssue,
   GraveyardRequestError,
@@ -34,6 +39,8 @@ type ViewState =
 
 export interface GraveyardViewProps {
   demo: boolean;
+  /** The view from `?view=` on the first render. The graveyard scene is the default. */
+  initialView?: GraveyardViewMode;
   /** The signed-in login (own graveyard only), or null. Never a token. */
   login?: string | null;
 }
@@ -49,13 +56,14 @@ function badgeFor(demo: boolean, sampleData: boolean): GraveyardBadge | null {
  * Scans once per mount (or per retry), scores the repos with the deterministic rules,
  * and renders one tombstone per repo. Opening a stone shows the detail drawer.
  */
-export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
+export function GraveyardView({ demo, initialView = "graveyard", login = null }: GraveyardViewProps) {
   const [state, setState] = useState<ViewState>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [openName, setOpenName] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("newest");
-  const listRef = useRef<HTMLUListElement>(null);
+  const [view, setView] = useState<GraveyardViewMode>(initialView);
+  const stonesRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -89,6 +97,12 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
     [entries, filter, sort],
   );
 
+  // The choice lives in the URL (?view=list). replaceState keeps the page and the scan as they are.
+  const changeView = (next: GraveyardViewMode) => {
+    setView(next);
+    const { pathname, search, hash } = window.location;
+    window.history.replaceState(window.history.state, "", `${pathname}${withViewMode(search, next)}${hash}`);
+  };
   const retry = () => {
     setState({ phase: "loading" });
     setAttempt((n) => n + 1);
@@ -99,8 +113,8 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
     setOpenName(null);
     if (name === null) return;
     // Return focus to the stone that opened the drawer.
-    const stone = [...(listRef.current?.querySelectorAll<HTMLLIElement>("li") ?? [])]
-      .find((li) => li.dataset.repo === name)
+    const stone = [...(stonesRef.current?.querySelectorAll<HTMLElement>("[data-repo]") ?? [])]
+      .find((item) => item.dataset.repo === name)
       ?.querySelector("button");
     requestAnimationFrame(() => stone?.focus());
   }, [openName]);
@@ -143,10 +157,20 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
   }
 
   const open = entries.find((entry) => entry.repo.name === openName) ?? null;
+  const emptyMessage = (
+    <div className="graveyard-message graveyard-empty" role="status">
+      <p className="graveyard-empty-title">No repos rest here.</p>
+      <button type="button" className="graveyard-button" onClick={() => setFilter("all")}>
+        Show all
+      </button>
+    </div>
+  );
 
   return (
     <>
       {header}
+      <ViewToggle view={view} onChange={changeView} />
+      {view === "graveyard" ? <GraveyardLegend /> : null}
       <GraveyardControls
         filter={filter}
         sort={sort}
@@ -158,17 +182,20 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
         {resultsText(visible.length, entries.length)}
       </p>
 
+      <div ref={stonesRef}>
+      {view === "list" ? (
+        visible.length === 0 ? (
+          emptyMessage
+        ) : (
+          <GraveyardList entries={visible} onSelect={setOpenName} />
+        )
+      ) : (
       <div className="graveyard-scene-wrap">
         <GraveyardScene alive={countAlive(entries)} total={entries.length}>
           {visible.length === 0 ? (
-            <div className="graveyard-message graveyard-empty" role="status">
-              <p className="graveyard-empty-title">No repos rest here.</p>
-              <button type="button" className="graveyard-button" onClick={() => setFilter("all")}>
-                Show all
-              </button>
-            </div>
+            emptyMessage
           ) : (
-            <ul className="graveyard-stones" aria-label="Graveyard" ref={listRef}>
+            <ul className="graveyard-stones" aria-label="Graveyard">
               {visible.map(({ repo, tombstone }) => (
                 <li key={repo.name} className="graveyard-stone" data-repo={repo.name}>
                   <Tombstone
@@ -177,6 +204,7 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
                     cause={tombstone.cause.label}
                     epitaph={tombstone.epitaph}
                     candle={tombstone.scene.candle}
+                    vocab={buildStoneVocab(tombstone, repo.stars)}
                     onSelect={() => setOpenName(repo.name)}
                   />
                 </li>
@@ -184,6 +212,8 @@ export function GraveyardView({ demo, login = null }: GraveyardViewProps) {
             </ul>
           )}
         </GraveyardScene>
+      </div>
+      )}
       </div>
 
       {open ? (

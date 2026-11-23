@@ -7,7 +7,7 @@ export const SIGN_IN_CALLBACK_MESSAGE =
 /** Shown next to the Sign in button when the server has no GitHub OAuth settings. */
 export const SIGN_IN_NOT_SET_UP_MESSAGE =
   "GitHub sign-in is not set up on this server yet. Try the demo graveyard.";
-export const SIGN_IN_FAILED_MESSAGE = "Sign-in failed. You can try again.";
+export const SIGN_IN_FAILED_MESSAGE = "The gate would not open this time. Nothing was saved. You can try again.";
 
 /**
  * Maps the `?error=` code Auth.js adds to the landing page URL to a short message.

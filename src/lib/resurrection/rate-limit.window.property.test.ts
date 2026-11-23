@@ -27,7 +27,11 @@ describe("Feature: resurrection, Property 11: Sliding window never exceeds the l
               );
             } else {
               expect(result.retryAfterSeconds).toBeGreaterThanOrEqual(1);
-              expect(result.timestamps).not.toContain(now);
+              // A denial records nothing. An earlier request in the same millisecond may
+              // legitimately already be stored, so compare counts instead of absence.
+              expect(result.timestamps.filter((t) => t === now)).toHaveLength(
+                stored.filter((t) => t === now).length,
+              );
               expect(result.timestamps.length).toBe(stored.filter((t) => now - t < windowMs).length);
             }
             expect("retryAfterSeconds" in result).toBe(!result.allowed);

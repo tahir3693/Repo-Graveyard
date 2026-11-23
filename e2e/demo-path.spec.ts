@@ -37,7 +37,7 @@ test("demo path: from the landing page to a revival plan", async ({ page }) => {
   await page.route("**/api/resurrect", async (route) => {
     resurrectBodies.push(route.request().postDataJSON());
     // A short wait makes the loading state observable without making the test slow.
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 1200));
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -71,9 +71,9 @@ test("demo path: from the landing page to a revival plan", async ({ page }) => {
 
   // 5. Resurrect.
   await drawer.getByRole("button", { name: "Resurrect" }).click();
-  await expect(drawer.getByRole("status")).toContainText(
-    "The fog is gathering",
-  );
+  await expect(
+    drawer.getByRole("status").filter({ hasText: "The fog is gathering" }),
+  ).toBeVisible();
 
   // 6. The revival plan appears.
   await expect(

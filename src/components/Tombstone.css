@@ -144,3 +144,127 @@
   fill: var(--color-glow);
   filter: drop-shadow(0 0 var(--space-2) var(--color-glow));
 }
+
+/*
+ * Stone size from stars (stone-vocab.ts). Width and height both step up a little, so the
+ * grid stays tidy: every size is at least 192px wide, far above the 44px target minimum.
+ */
+.tombstone[data-size="small"] {
+  max-width: calc(var(--space-4) * 12);
+  min-height: calc(var(--space-4) * 14);
+}
+.tombstone[data-size="medium"] {
+  max-width: calc(var(--space-4) * 14);
+  min-height: calc(var(--space-4) * 15);
+}
+.tombstone[data-size="large"] {
+  max-width: calc(var(--space-4) * 15);
+  min-height: calc(var(--space-4) * 16);
+}
+.tombstone[data-size="grand"] {
+  max-width: calc(var(--space-4) * 16);
+  min-height: calc(var(--space-4) * 18);
+}
+
+/*
+ * Decor layer: fog, cracks and vines. It sits behind the text (z-index -1 inside the
+ * stone's own stacking context) and clips to the arched shape. Cracks and vines stay in
+ * the side gutters, and fog stays in a reserved band at the bottom, so they never cover
+ * text and the text keeps its contrast.
+ */
+.tombstone {
+  isolation: isolate;
+}
+.tombstone-decor {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.tombstone:not([data-fog="none"])[data-fog] {
+  padding-bottom: calc(var(--space-4) + var(--space-8));
+}
+
+/* Fog thickness: three steps from days of silence. Opacity only changes between steps. */
+.tombstone-fog {
+  position: absolute;
+  right: -10%;
+  bottom: 0;
+  left: -10%;
+  height: var(--space-8);
+  background:
+    radial-gradient(ellipse 60% 100% at 30% 100%, var(--color-text-muted), transparent),
+    radial-gradient(ellipse 50% 90% at 75% 100%, var(--color-text-muted), transparent);
+  animation: tombstone-fog-drift 6000ms ease-in-out infinite alternate;
+  will-change: transform;
+}
+.tombstone-fog[data-step="light"] {
+  opacity: 0.25;
+}
+.tombstone-fog[data-step="medium"] {
+  opacity: 0.45;
+}
+.tombstone-fog[data-step="dense"] {
+  opacity: 0.7;
+}
+@keyframes tombstone-fog-drift {
+  from {
+    transform: translate3d(-4%, 0, 0);
+  }
+  to {
+    transform: translate3d(4%, 0, 0);
+  }
+}
+
+/* Cracks: failing CI. A thin ember line in the upper right gutter. */
+.tombstone-cracks {
+  position: absolute;
+  top: var(--space-6);
+  right: var(--space-1);
+  width: var(--space-3);
+  height: 40%;
+  fill: none;
+  stroke: var(--color-ember);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.tombstone-cracks path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Vines: outdated dependencies. They grow up from the base in both side gutters. */
+.tombstone-vine {
+  position: absolute;
+  bottom: var(--space-1);
+  width: var(--space-3);
+  height: 45%;
+}
+.tombstone-vine-left {
+  left: var(--space-1);
+}
+.tombstone-vine-right {
+  right: var(--space-1);
+  transform: scaleX(-1);
+}
+.tombstone-vine-stem {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.tombstone-vine-leaf {
+  fill: var(--color-text-muted);
+}
+
+/* Reduced motion: the fog stays still at its density. */
+@media (prefers-reduced-motion: reduce) {
+  .tombstone-fog {
+    animation: none;
+    will-change: auto;
+  }
+}

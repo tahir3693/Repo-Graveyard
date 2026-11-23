@@ -2,6 +2,7 @@
 
 import { MotionConfig, motion, useReducedMotion } from "framer-motion";
 import { useId } from "react";
+import { stoneAriaLabel, type FogStep, type StoneVocab } from "@/lib/graveyard/stone-vocab";
 import "./Tombstone.css";
 
 export type TombstoneStatus = "alive" | "dying" | "dead" | "ancient";
@@ -14,6 +15,11 @@ export interface TombstoneProps {
   status: TombstoneStatus;
   /** Lit candle: the repo had recent activity. */
   candle: boolean;
+  /**
+   * Visual vocabulary from `buildStoneVocab`: size, fog, cracks and vines. When given, the
+   * accessible name also says each trait in words. Without it the stone is plain.
+   */
+  vocab?: StoneVocab;
   onSelect?: () => void;
 }
 
@@ -95,12 +101,57 @@ function CandleGlow({ still }: { still: boolean }) {
   );
 }
 
+/** Fog around the base. Decorative: the same fact is in the accessible name. */
+function FogBand({ step }: { step: Exclude<FogStep, "none"> }) {
+  return <span className="tombstone-fog" data-step={step} />;
+}
+
+/** A crack in the stone, drawn in the right gutter so it never crosses the text. */
+function Cracks() {
+  return (
+    <svg
+      className="tombstone-cracks"
+      viewBox="0 0 16 80"
+      preserveAspectRatio="none"
+    >
+      <path d="M12 0 L6 14 L11 26 L4 40 L9 52 L5 66 L8 80" />
+      <path d="M6 14 L1 18 M11 26 L15 31 M4 40 L1 46" />
+    </svg>
+  );
+}
+
+/** Two vines growing up from the base, in the side gutters. */
+function Vines() {
+  return (
+    <>
+      {(["left", "right"] as const).map((side) => (
+        <svg
+          key={side}
+          className={`tombstone-vine tombstone-vine-${side}`}
+          viewBox="0 0 16 80"
+          preserveAspectRatio="none"
+        >
+          <path
+            className="tombstone-vine-stem"
+            d="M8 80 C2 66 14 56 8 44 C3 34 12 24 8 8"
+          />
+          <path
+            className="tombstone-vine-leaf"
+            d="M8 62 Q1 60 1 53 Q8 54 8 62Z M8 46 Q15 44 15 37 Q8 38 8 46Z M8 28 Q2 26 2 20 Q8 21 8 28Z"
+          />
+        </svg>
+      ))}
+    </>
+  );
+}
+
 export function Tombstone({
   name,
   cause,
   epitaph,
   status,
   candle,
+  vocab,
   onSelect,
 }: TombstoneProps) {
   const reduce = useReducedMotion() === true;
@@ -113,7 +164,18 @@ export function Tombstone({
       <motion.button
         type="button"
         className="tombstone"
-        aria-label={`${name}, ${STATUS_LABEL[status]}, ${cause}`}
+        aria-label={
+          vocab === undefined
+            ? `${name}, ${STATUS_LABEL[status]}, ${cause}`
+            : stoneAriaLabel({
+                name,
+                statusLabel: STATUS_LABEL[status],
+                cause,
+                vocab: { ...vocab, candle },
+              })
+        }
+        data-size={vocab?.size}
+        data-fog={vocab?.fog}
         aria-describedby={epitaphId}
         onClick={onSelect}
         initial={{ opacity: 0, y: 24 }}
@@ -127,6 +189,14 @@ export function Tombstone({
         }
       >
         <span className="tombstone-ring" aria-hidden="true" />
+        {vocab !== undefined &&
+        (vocab.fog !== "none" || vocab.cracks || vocab.vines) ? (
+          <span className="tombstone-decor" aria-hidden="true">
+            {vocab.fog !== "none" ? <FogBand step={vocab.fog} /> : null}
+            {vocab.cracks ? <Cracks /> : null}
+            {vocab.vines ? <Vines /> : null}
+          </span>
+        ) : null}
         <span className="tombstone-name">{name}</span>
         <span className={`tombstone-status ${statusClass}`}>
           <StatusIcon status={status} />

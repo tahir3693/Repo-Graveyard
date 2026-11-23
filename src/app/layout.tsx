@@ -17,7 +17,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Repo Graveyard",
   description:
-    "Turn your abandoned GitHub repos into a haunted graveyard, then bring them back with an AI revival plan.",
+    "Turn your abandoned GitHub repos into a haunted graveyard, then bring them back with a revival plan.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

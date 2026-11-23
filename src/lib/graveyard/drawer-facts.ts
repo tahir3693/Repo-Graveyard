@@ -22,7 +22,7 @@ export function formatLastCommit(daysInactive: number | null): string {
   return `${Math.floor(daysInactive / 365)} years ago`;
 }
 
-const CI_TEXT: Record<ScannedRepo["ciStatus"], string> = {
+export const CI_TEXT: Record<ScannedRepo["ciStatus"], string> = {
   passing: "Passing",
   failing: "Failing",
   none: "No CI",

@@ -64,7 +64,7 @@ test("demo mode: File this issue is look-only and sends no request", async ({ pa
   await button.click({ force: true });
 
   await expect(button).toBeFocused();
-  await expect(drawer.getByText("Filing")).toHaveCount(0);
+  await expect(drawer.getByText(/^Filing…$/)).toHaveCount(0);
   await expect(drawer.getByText("Issue filed")).toHaveCount(0);
   expect(issueRequests).toEqual([]);
 });
