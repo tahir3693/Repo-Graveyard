@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth/token", () => ({ readUserToken: vi.fn() }));
+vi.mock("@/lib/auth/token", () => ({ readUserToken: vi.fn(), readUserTokenFromRequest: vi.fn() }));
 vi.mock("@/lib/github/requester", () => ({ createOctokitRequester: vi.fn() }));
 
 import * as route from "./route";

@@ -35,7 +35,7 @@ import {
 type ViewState =
   | { phase: "loading" }
   | { phase: "error"; code: string | null }
-  | { phase: "ready"; entries: GraveEntry[]; sampleData: boolean };
+  | { phase: "ready"; entries: GraveEntry[]; sampleData: boolean; skipped: number };
 
 export interface GraveyardViewProps {
   demo: boolean;
@@ -75,6 +75,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
           phase: "ready",
           entries: buildGraveEntries(scan.repos, new Date()),
           sampleData: scan.sampleData === true,
+          skipped: scan.skippedInvalid,
         });
       })
       .catch((error: unknown) => {
@@ -142,6 +143,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
       summary={summaryText(counts)}
       badge={badgeFor(demo, state.sampleData)}
       login={login}
+      skippedCount={state.skipped}
     />
   );
 

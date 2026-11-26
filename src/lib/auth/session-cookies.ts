@@ -22,3 +22,12 @@ export function appendClearCookies(headers: Headers, names: readonly string[]): 
     headers.append("Set-Cookie", `${name}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax${secure}`);
   }
 }
+
+/** The cookie names in a `Cookie` request header. Values are never read. */
+export function cookieNamesOf(header: string | null): string[] {
+  if (header === null || header === "") return [];
+  return header
+    .split(";")
+    .map((part) => part.split("=")[0]?.trim() ?? "")
+    .filter((name) => name !== "");
+}

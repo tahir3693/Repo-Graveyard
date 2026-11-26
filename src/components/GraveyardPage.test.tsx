@@ -20,6 +20,19 @@ describe("GraveyardHeader", () => {
     expect(html).not.toContain("graveyard-badge");
   });
 
+  it("shows how many repos could not be read, only when there are some", () => {
+    const some = renderToStaticMarkup(<GraveyardHeader summary="8 repos" badge={null} login={null} skippedCount={3} />);
+    expect(some).toContain(">3 repos could not be read</p>");
+    const one = renderToStaticMarkup(<GraveyardHeader summary="8 repos" badge={null} login={null} skippedCount={1} />);
+    expect(one).toContain(">1 repo could not be read</p>");
+    for (const html of [
+      renderToStaticMarkup(<GraveyardHeader summary="8 repos" badge={null} login={null} skippedCount={0} />),
+      renderToStaticMarkup(<GraveyardHeader summary="8 repos" badge={null} login={null} />),
+    ]) {
+      expect(html).not.toContain("could not be read");
+    }
+  });
+
   it.each(["Demo", "Sample repos"] as const)("shows the %s badge", (badge) => {
     const html = renderToStaticMarkup(<GraveyardHeader summary={null} badge={badge} login={null} />);
     expect(html).toContain(`>${badge}</p>`);

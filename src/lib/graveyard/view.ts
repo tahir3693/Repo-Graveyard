@@ -95,3 +95,9 @@ export function resultsText(shown: number, total: number): string {
   const noun = total === 1 ? "repo" : "repos";
   return `Showing ${shown} of ${total} ${noun}`;
 }
+
+/** "3 repos could not be read", or null when none were skipped. Always plain text. */
+export function skippedText(skipped: number): string | null {
+  if (!Number.isInteger(skipped) || skipped <= 0) return null;
+  return skipped === 1 ? "1 repo could not be read" : `${skipped} repos could not be read`;
+}

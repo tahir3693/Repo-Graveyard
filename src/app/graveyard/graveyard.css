@@ -536,3 +536,10 @@
     text-align: left;
   }
 }
+/* Repos the scan could not read: a plain, muted line under the summary. Text only. */
+.graveyard-skipped {
+  max-width: 40rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+}

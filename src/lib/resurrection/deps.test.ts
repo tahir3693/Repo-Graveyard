@@ -5,7 +5,10 @@ vi.mock("@/lib/github/requester", () => ({
   createOctokitRequester: vi.fn(() => vi.fn()),
   readGitHubApiBaseUrl: vi.fn(() => null),
 }));
-vi.mock("@/lib/auth/token", () => ({ readUserToken: vi.fn(async () => null) }));
+vi.mock("@/lib/auth/token", () => ({
+  readUserToken: vi.fn(async () => null),
+  readUserTokenFromRequest: vi.fn(async () => null),
+}));
 
 import { createGeminiClient } from "@/lib/llm-gemini";
 

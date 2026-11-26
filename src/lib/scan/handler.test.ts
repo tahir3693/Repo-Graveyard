@@ -346,22 +346,85 @@ describe("handleScan failure mapping", () => {
     await errorOf(await handleScan(deps, post({})), "invalid_github_response");
   });
 
-  it("maps unexpected exceptions to internal_error and logs only code and requestId", async () => {
+  it("maps a throwing token read to unauthorized, and logs a redacted diagnostic", async () => {
     const h = harness({ repos });
+    const FAKE = "ghp_FAKEfakeFAKE0123456789abcdefABCDEF01";
     const deps: ScanDeps = {
       ...h.deps,
       readUserToken: async () => {
-        throw new Error("stack with " + USER_TOKEN);
+        throw new TypeError(`stack with ${USER_TOKEN} and ${FAKE} and Bearer abc.def`);
       },
     };
     const res = await handleScan(deps, post({}));
-    await errorOf(res, "internal_error");
+    await errorOf(res, "unauthorized");
+    expect(h.fake.calls).toEqual([]);
     const logged = vi.fn();
     await handleScan({ ...deps, log: logged }, post({}));
     expect(logged).toHaveBeenCalledTimes(1);
     const entry = logged.mock.calls[0]?.[0];
-    expect(Object.keys(entry).sort()).toEqual(["code", "requestId"]);
-    expect(JSON.stringify(entry)).not.toContain(USER_TOKEN);
+    expect(Object.keys(entry).sort()).toEqual(["code", "errorName", "message", "requestId", "step"]);
+    expect(entry).toMatchObject({ code: "unauthorized", errorName: "TypeError", step: "read-token" });
+    expect(entry.message).toContain("[redacted]");
+    expect(entry.message.length).toBeLessThanOrEqual(120);
+    const text = JSON.stringify(entry);
+    for (const secret of [USER_TOKEN, FAKE, "abc.def"]) expect(text).not.toContain(secret);
+  });
+
+  it("maps an unexpected exception in each stage to a typed code and names the step", async () => {
+    const cases: Array<{ name: string; patch: (h: ReturnType<typeof harness>) => ScanDeps; code: ErrorCode; step: string }> = [
+      {
+        name: "creating the requester",
+        patch: (h) => ({
+          ...h.deps,
+          makeRequester: () => {
+            throw new TypeError("requester broke");
+          },
+        }),
+        code: "github_unavailable",
+        step: "list-repos",
+      },
+      {
+        name: "writing the cache",
+        patch: (h) => ({
+          ...h.deps,
+          cache: {
+            get: () => null,
+            set: () => {
+              throw new RangeError("cache broke");
+            },
+          },
+        }),
+        code: "invalid_github_response",
+        step: "build-response",
+      },
+    ];
+    for (const item of cases) {
+      const h = harness({ repos });
+      const logged = vi.fn();
+      const res = await handleScan({ ...item.patch(h), log: logged }, post({}));
+      await errorOf(res, item.code);
+      const entry = logged.mock.calls[0]?.[0];
+      expect(entry, item.name).toMatchObject({ code: item.code, step: item.step });
+      expect(entry.errorName, item.name).toMatch(/Error$/);
+    }
+  });
+
+  it("logs only code and requestId for a normal, known failure", async () => {
+    const h = harness({ listError: { status: 404, message: "Not Found", response: { headers: {} } } });
+    await handleScan(h.deps, post({}));
+    expect(h.log).toHaveBeenCalledTimes(1);
+    expect(Object.keys(h.log.mock.calls[0]?.[0]).sort()).toEqual(["code", "requestId"]);
+  });
+
+  it("answers a response that fails validation with a typed code and the failing field path", async () => {
+    const h = harness({ repos });
+    h.cache.set("demo", { repos: [{ name: "x" } as never], skippedForks: 0, skippedInvalid: 0, truncated: false }, false, NOW.getTime());
+    const logged = vi.fn();
+    const res = await handleScan({ ...h.deps, log: logged }, post({ demo: true }));
+    await errorOf(res, "invalid_github_response");
+    const entry = logged.mock.calls[0]?.[0];
+    expect(entry).toMatchObject({ code: "invalid_github_response", step: "build-response", errorName: "ResponseValidation" });
+    expect(entry.message).toMatch(/^repos\.0\./);
   });
 });
 

@@ -5,7 +5,10 @@ vi.mock("@/lib/github/requester", () => ({
   readGitHubApiBaseUrl: vi.fn(() => "http://127.0.0.1:9999"),
 }));
 vi.mock("@/lib/github/issue-writer", () => ({ createIssueWriter: vi.fn(() => vi.fn()) }));
-vi.mock("@/lib/auth/token", () => ({ readUserToken: vi.fn(async () => null) }));
+vi.mock("@/lib/auth/token", () => ({
+  readUserToken: vi.fn(async () => null),
+  readUserTokenFromRequest: vi.fn(async () => null),
+}));
 
 import { createIssueWriter } from "@/lib/github/issue-writer";
 import { createOctokitRequester } from "@/lib/github/requester";

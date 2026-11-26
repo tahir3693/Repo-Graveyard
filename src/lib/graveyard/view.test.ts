@@ -10,6 +10,7 @@ import {
   isFilter,
   isSortKey,
   resultsText,
+  skippedText,
   sortEntries,
   summaryText,
 } from "@/lib/graveyard/view";
@@ -150,5 +151,30 @@ describe("guards and labels", () => {
   it("builds the results line", () => {
     expect(resultsText(4, 12)).toBe("Showing 4 of 12 repos");
     expect(resultsText(1, 1)).toBe("Showing 1 of 1 repo");
+  });
+});
+
+describe("skippedText", () => {
+  it("says nothing when no repo was skipped, or the count is not a positive whole number", () => {
+    for (const value of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(skippedText(value)).toBeNull();
+    }
+  });
+
+  it("uses the singular for one repo and the plural for more", () => {
+    expect(skippedText(1)).toBe("1 repo could not be read");
+    expect(skippedText(2)).toBe("2 repos could not be read");
+    expect(skippedText(14)).toBe("14 repos could not be read");
+  });
+
+  it("property: every positive count gives a plain one-line sentence that starts with the count", () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 1, max: 10_000 }), (n) => {
+        const text = skippedText(n);
+        expect(text).not.toBeNull();
+        expect(text?.startsWith(`${n} repo`)).toBe(true);
+        expect(text?.endsWith("could not be read")).toBe(true);
+      }),
+    );
   });
 });

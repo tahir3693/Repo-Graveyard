@@ -1,6 +1,4 @@
-import { NextRequest } from "next/server";
-
-import { readUserToken } from "@/lib/auth/token";
+import { readUserTokenFromRequest } from "@/lib/auth/token";
 import type { EnvRecord } from "@/lib/env";
 import { createOctokitRequester, readGitHubApiBaseUrl } from "@/lib/github/requester";
 import type { LlmClient } from "@/lib/llm";
@@ -10,10 +8,6 @@ import { readResurrectionConfig } from "./config";
 import type { ResurrectDeps } from "./handle-resurrect";
 import { getResurrectionState } from "./state";
 
-// Adapts a standard Request to the NextRequest that next-auth's getToken expects (same as the scan route).
-function readSessionToken(req: Request): ReturnType<ResurrectDeps["readUserToken"]> {
-  return readUserToken(new NextRequest(req));
-}
 
 /** Server only. The LLM key and model come from the env the route passes in; the key is never logged. */
 export function createResurrectionDeps(env: EnvRecord): ResurrectDeps {
@@ -30,7 +24,7 @@ export function createResurrectionDeps(env: EnvRecord): ResurrectDeps {
     env: {},
     config,
     makeRequester: (token) => createOctokitRequester(token, readGitHubApiBaseUrl(env)),
-    readUserToken: readSessionToken,
+    readUserToken: (req) => readUserTokenFromRequest(req, env),
     makeLlmClient,
     state: getResurrectionState(),
     newRequestId: () => crypto.randomUUID(),
