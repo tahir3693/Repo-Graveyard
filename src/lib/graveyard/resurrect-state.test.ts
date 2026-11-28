@@ -8,14 +8,9 @@ import {
   type ResurrectState,
   type RevivalPlanData,
 } from "./resurrect-state";
+import { makePlanData } from "./plan.fixtures";
 
-const plan: RevivalPlanData = {
-  diagnosis: "Paused after a breaking change.",
-  smallestNextStep: "Bump the dependency and run the tests.",
-  effort: "a weekend",
-  issueTitle: "Revive: bump dependencies",
-  issueBody: "Start by updating the lockfile.",
-};
+const plan: RevivalPlanData = makePlanData();
 
 describe("resurrectReducer", () => {
   it("starts loading from idle", () => {

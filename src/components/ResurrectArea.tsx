@@ -276,20 +276,8 @@ export function ResurrectArea({
             <p className="resurrect-sr-only" role="status">
               Revival plan ready for {repoName}.
             </p>
-            <motion.div
-              className="resurrect-plan"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={
-                reduce
-                  ? fadeOnly
-                  : {
-                      delay: ms(t.planDelayMs),
-                      duration: ms(t.planMs),
-                      ease: "easeOut",
-                    }
-              }
-            >
+            {/* Each plan section reveals itself, about 60ms apart (see ResurrectPlan). */}
+            <div className="resurrect-plan">
               <ResurrectPlan
                 plan={state.plan}
                 demo={demo}
@@ -300,7 +288,7 @@ export function ResurrectArea({
                 onCopy={() => copyIssue(state.plan)}
                 onFile={() => fileIssueNow(state.plan)}
               />
-            </motion.div>
+            </div>
           </>
         ) : null}
       </section>

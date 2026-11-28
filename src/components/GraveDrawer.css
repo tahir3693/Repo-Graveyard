@@ -259,6 +259,15 @@
   }
 }
 
+/* Wide screens: a wider drawer, so Quick wins and Risks fit side by side. This comes
+   after the 768px rule on purpose: both set the width, and the later rule wins. */
+@media (min-width: 1024px) {
+  .drawer {
+    width: 44rem;
+    max-width: 100%;
+  }
+}
+
 /* Reduced motion: the drawer appears at once. */
 @media (prefers-reduced-motion: reduce) {
   .drawer[open] {

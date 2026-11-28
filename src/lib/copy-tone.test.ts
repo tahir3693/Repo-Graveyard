@@ -49,7 +49,17 @@ describe("user-facing copy tone", () => {
   });
 
   it("keeps blame words out of the plan notes", () => {
-    const notes = [plan.FALLBACK_PLAN_NOTE, plan.DEMO_ISSUE_NOTE, plan.FILED_MESSAGE, plan.COPIED_MESSAGE, plan.COPY_FAILED_MESSAGE];
+    const notes = [
+      plan.FALLBACK_PLAN_NOTE,
+      plan.AI_PLAN_NOTE,
+      plan.LABELS_NOTE,
+      plan.DEMO_ISSUE_NOTE,
+      plan.FILED_MESSAGE,
+      plan.COPIED_MESSAGE,
+      plan.COPY_FAILED_MESSAGE,
+      ...Object.values(plan.VERDICT_LABEL),
+      ...Object.values(plan.EFFORT_LEVEL_LABEL),
+    ];
     for (const note of notes) expect(blames(note)).toBe(false);
   });
 

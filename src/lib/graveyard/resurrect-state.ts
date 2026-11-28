@@ -1,9 +1,9 @@
 import type { EffortLevel, RevivalPlan } from "@/lib/resurrection/plan";
 
 /**
- * Shape of a revival plan as the drawer needs it. The flat fields are what the drawer
- * shows today. `detail` holds the full plan from the server (verdict, roadmap, quick
- * wins, risks, effort, issue labels) for the sections the drawer adds later.
+ * Shape of a revival plan as the drawer needs it. `detail` is the full server plan
+ * (verdict, roadmap, quick wins, risks, effort, issue and labels). The flat fields are
+ * derived from it and feed the Copy and File actions.
  */
 export interface RevivalPlanData {
   diagnosis: string;
@@ -11,8 +11,8 @@ export interface RevivalPlanData {
   effort: "under 1 hour" | "a weekend" | "a week or more";
   issueTitle: string;
   issueBody: string;
-  /** The full server plan. Absent on plans built by hand in tests. */
-  detail?: RevivalPlan;
+  /** The full server plan. The drawer shows every section of it. */
+  detail: RevivalPlan;
   /** Present (true) only when the rule-built fallback plan was used instead of the AI. */
   fallback?: true;
 }

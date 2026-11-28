@@ -252,6 +252,8 @@
   gap: var(--space-4);
   min-width: 0;
   order: 3;
+  /* The plan sections switch to two columns by the plan's own width, not the window's. */
+  container-type: inline-size;
 }
 
 .resurrect-plan-title {
@@ -317,7 +319,6 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg);
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
 
