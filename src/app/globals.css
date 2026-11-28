@@ -83,6 +83,8 @@
   /* Elevation: two levels, both soft violet glows. No dark drop shadows. */
   --elevation-1: 0 0 var(--space-4) var(--color-glow-faint); /* cards, button hover */
   --elevation-2: 0 0 var(--space-6) var(--color-glow-soft); /* drawer, overlays */
+  /* Pressed: an inset glow, so a pressed control looks pushed in without moving. */
+  --press-inset: inset 0 0 var(--space-3) var(--color-glow-soft);
 
   /* Motion: short and calm, one easing */
   --motion-fast: 150ms; /* hover, focus, press */
@@ -202,7 +204,7 @@ h3 {
 .btn-secondary:active {
   --btn-bg: var(--color-surface-2-active);
   --btn-border: var(--color-glow);
-  box-shadow: none;
+  box-shadow: var(--press-inset);
 }
 
 /* Quiet: navigation and low-priority actions. No edge until hover. */
@@ -221,16 +223,28 @@ h3 {
   --btn-border: var(--color-glow-soft);
 }
 
-/* A toggle that is on looks like the primary style, and also shows a check mark in its markup. */
+/*
+ * A toggle that is on looks like the primary style with a soft glow, and also shows a
+ * check mark in its markup. The glow and the fill tell it apart from an off toggle, and
+ * a press pushes it in (darker fill, no glow), so the three states are easy to tell apart.
+ */
 .btn[aria-pressed="true"] {
   --btn-bg: var(--color-glow);
   --btn-fg: var(--color-bg);
   --btn-border: var(--color-glow);
+  box-shadow: var(--elevation-1);
 }
 
 .btn[aria-pressed="true"]:hover {
   --btn-bg: var(--color-glow-hover);
   --btn-border: var(--color-glow-hover);
+  box-shadow: var(--elevation-2);
+}
+
+.btn[aria-pressed="true"]:active {
+  --btn-bg: var(--color-glow-active);
+  --btn-border: var(--color-glow-active);
+  box-shadow: none;
 }
 
 .btn:focus-visible {

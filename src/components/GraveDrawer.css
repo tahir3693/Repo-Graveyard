@@ -25,6 +25,7 @@
   box-shadow: var(--elevation-2);
 }
 
+/* Open: the sheet rises and fades in while the backdrop fades in with it. */
 .drawer[open] {
   display: flex;
   flex-direction: column;
@@ -37,13 +38,44 @@
   background: color-mix(in srgb, var(--color-bg) 80%, transparent);
 }
 
+.drawer[open]::backdrop {
+  animation: drawer-fade-in var(--motion-base) var(--ease);
+}
+
+/* Close: the same movement in reverse. GraveDrawer.tsx waits for this to end (or for a
+   short timer) before it tells the parent, so focus returns to the stone afterwards. */
+.drawer[open].drawer-closing {
+  animation: drawer-out-down var(--motion-base) var(--ease) forwards;
+  pointer-events: none;
+}
+
+.drawer[open].drawer-closing::backdrop {
+  animation: drawer-fade-out var(--motion-base) var(--ease) forwards;
+}
+
+/* Header: raised at the top and fading into the panel, with a drag handle on phones. */
 .drawer-top {
+  position: relative;
   display: flex;
   flex: none;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-4) var(--space-4);
-  border-bottom: 1px solid var(--color-border-subtle);
+  padding: var(--space-6) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(to bottom, var(--color-surface-2), var(--color-surface));
+}
+
+/* The handle says "this is a sheet". It is decorative: the Close button does the work. */
+.drawer-top::before {
+  content: "";
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  width: var(--space-12);
+  height: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+  transform: translateX(-50%);
 }
 
 .drawer-header {
@@ -100,6 +132,10 @@
   border: 1px solid currentColor;
   border-radius: var(--radius-sm);
   font-weight: 600;
+  /* Color changes ease over, so "Dead" to "Reviving" is a change of mood, not a flash. */
+  transition:
+    color var(--motion-base) var(--ease),
+    box-shadow var(--motion-base) var(--ease);
 }
 
 .drawer-status .tombstone-status-icon {
@@ -116,6 +152,14 @@
   color: var(--color-ember);
 }
 
+/* Reviving: violet with a soft glow that swells once (in step with the stone's glow) and
+   settles. The sequence is described in design-system.md, "Resurrection moment". */
+.drawer-status-reviving {
+  color: var(--color-glow);
+  box-shadow: var(--elevation-1);
+  animation: drawer-badge-revive var(--motion-slow) var(--ease) 500ms both;
+}
+
 .drawer-score {
   color: var(--color-text-muted);
 }
@@ -129,6 +173,7 @@
   color: var(--color-text-muted);
 }
 
+/* Body: facts, epitaph, link, then the Resurrect area. Each part is set off by a rule. */
 .drawer-body {
   display: flex;
   flex: 1 1 auto;
@@ -141,10 +186,15 @@
   overscroll-behavior: contain;
 }
 
-/* Facts row: compact tiles that wrap, so nothing is cut off at any width. */
+.drawer-body > .resurrect {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+/* Facts: two columns on phones, with the odd last tile across both. */
 .drawer-facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
   margin: 0;
 }
@@ -159,6 +209,12 @@
   border-radius: var(--radius-md);
   background: var(--color-surface-2);
   box-shadow: var(--elevation-1);
+}
+
+@media (max-width: 1023px) {
+  .drawer-fact:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
 }
 
 .drawer-fact dt {
@@ -176,8 +232,11 @@
   color: var(--color-ember);
 }
 
+/* The epitaph reads as a quotation, set off by a rule on the left. */
 .drawer-epitaph {
   margin: 0;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--color-border-strong);
   font-style: italic;
   color: var(--color-text);
 }
@@ -204,6 +263,58 @@
   }
 }
 
+@keyframes drawer-out-down {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(var(--space-6));
+  }
+}
+
+@keyframes drawer-out-side {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(var(--space-6));
+  }
+}
+
+@keyframes drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes drawer-badge-revive {
+  0% {
+    box-shadow: none;
+  }
+  40% {
+    box-shadow: var(--elevation-2);
+  }
+  100% {
+    box-shadow: var(--elevation-1);
+  }
+}
+
 @media (min-width: 768px) {
   .drawer {
     top: 0;
@@ -223,6 +334,15 @@
     animation-name: drawer-in-side;
   }
 
+  .drawer[open].drawer-closing {
+    animation-name: drawer-out-side;
+  }
+
+  /* A side drawer has no drag handle. */
+  .drawer-top::before {
+    display: none;
+  }
+
   .drawer-top {
     padding: var(--space-6) var(--space-6) var(--space-4);
   }
@@ -232,19 +352,36 @@
   }
 }
 
-/* Wide screens: a wider drawer, so Quick wins and Risks fit side by side. This comes
-   after the 768px rule on purpose: both set the width, and the later rule wins. */
+/* Wide screens: a wider drawer, so Quick wins and Risks fit side by side, and the five
+   facts sit in two rows (three, then two). This comes after the 768px rule on purpose:
+   both set the width, and the later rule wins. */
 @media (min-width: 1024px) {
   .drawer {
     width: 44rem;
     max-width: 100%;
   }
-}
 
-/* Reduced motion: the drawer appears at once. */
-@media (prefers-reduced-motion: reduce) {
-  .drawer[open] {
-    animation: none;
+  .drawer-facts {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 
+  .drawer-fact {
+    grid-column: span 2;
+  }
+
+  .drawer-fact:nth-child(n + 4) {
+    grid-column: span 3;
+  }
+}
+
+/* Reduced motion: the drawer appears and disappears at once (GraveDrawer.tsx closes
+   without waiting), and the badge shows its final glow with no swell. */
+@media (prefers-reduced-motion: reduce) {
+  .drawer[open],
+  .drawer[open]::backdrop,
+  .drawer[open].drawer-closing,
+  .drawer[open].drawer-closing::backdrop,
+  .drawer-status-reviving {
+    animation: none;
+  }
 }

@@ -53,4 +53,57 @@ describe("GraveDrawer", () => {
     expect(html.indexOf("drawer-top")).toBeLessThan(html.indexOf("drawer-body"));
     expect(html.indexOf("drawer-facts")).toBeLessThan(html.indexOf("slot content"));
   });
+
+  it("starts closed and open to the user: no closing class until Close is asked for", () => {
+    expect(html).toMatch(/<dialog[^>]*class="drawer"/);
+    expect(html).not.toContain("drawer-closing");
+  });
+});
+
+describe("GraveDrawer badge once a revival plan has arrived", () => {
+  function drawer(reviving: boolean) {
+    return renderToStaticMarkup(
+      <GraveDrawer
+        name={entry!.repo.name}
+        status={entry!.tombstone.status}
+        score={entry!.tombstone.score}
+        causeLabel={entry!.tombstone.cause.label}
+        epitaph={entry!.tombstone.epitaph}
+        facts={buildDrawerFacts(entry!.repo, entry!.tombstone)}
+        url={entry!.repo.url}
+        reviving={reviving}
+        onClose={noop}
+      />,
+    );
+  }
+
+  const badge = (html: string) => /<span class="drawer-status[^"]*">.*?<\/span>/.exec(html)?.[0] ?? "";
+
+  it("says Reviving with a flame instead of the death status", () => {
+    const html = badge(drawer(true));
+    expect(html).toContain("drawer-status-reviving");
+    expect(html).toContain(">Reviving<");
+    expect(html).not.toContain("Dead");
+    expect(html).toMatch(/<svg[^>]*aria-hidden="true"[^>]*><path d="M8 1\.5C/);
+  });
+
+  it("uses a different shape from the death badge, so the change never relies on color alone", () => {
+    const shape = (html: string) => /<(path|rect|circle)[^>]*>/.exec(badge(html))?.[0];
+    expect(shape(drawer(true))).not.toBe(shape(drawer(false)));
+  });
+
+  it("keeps the Dead badge, the score and the cause when no plan has arrived", () => {
+    const html = drawer(false);
+    expect(badge(html)).toContain("drawer-status-failing");
+    expect(badge(html)).toContain(">Dead<");
+    expect(html).not.toContain("Reviving");
+  });
+
+  it("never changes the death score or the cause: they are rule results, not a mood", () => {
+    for (const reviving of [true, false]) {
+      const html = drawer(reviving);
+      expect(html).toContain(`Death score ${entry!.tombstone.score} of 100`);
+      expect(html).toContain(entry!.tombstone.cause.label);
+    }
+  });
 });

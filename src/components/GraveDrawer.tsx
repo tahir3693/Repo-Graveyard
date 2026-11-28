@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { DrawerFact } from "@/lib/graveyard/drawer-facts";
-import { STATUS_LABEL, StatusIcon, type TombstoneStatus } from "./Tombstone";
+import { RevivingIcon, STATUS_LABEL, StatusIcon, type TombstoneStatus } from "./Tombstone";
 import "./GraveDrawer.css";
 
 export interface GraveDrawerProps {
@@ -15,7 +15,16 @@ export interface GraveDrawerProps {
   facts: readonly DrawerFact[];
   /** Shown as a link only when it is an https://github.com URL. */
   url: string;
-  /** Called on Escape, the Close button and a backdrop click. The parent restores focus. */
+  /**
+   * True once a revival plan has arrived for this repo. The badge then says "Reviving"
+   * with a flame instead of the death status. Presentation only: the score and the
+   * status the rules gave are not changed.
+   */
+  reviving?: boolean;
+  /**
+   * Called on Escape, the Close button and a backdrop click, after the exit animation
+   * (at once under reduced motion). The parent restores focus.
+   */
   onClose: () => void;
   /** The Resurrect area. Kept as a slot so this component stays free of data fetching. */
   children?: ReactNode;
@@ -46,6 +55,7 @@ export function GraveDrawer({
   epitaph,
   facts,
   url,
+  reviving = false,
   onClose,
   children,
 }: GraveDrawerProps) {
@@ -53,10 +63,38 @@ export function GraveDrawer({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const headingId = useId();
   const onCloseRef = useRef(onClose);
+  // Closing runs the exit animation first, then tells the parent. Each step happens once.
+  const [closing, setClosing] = useState(false);
+  const closeRequested = useRef(false);
+  const closeDone = useRef(false);
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  const finishClose = useCallback(() => {
+    if (closeDone.current) return;
+    closeDone.current = true;
+    onCloseRef.current();
+  }, []);
+
+  const requestClose = useCallback(() => {
+    if (closeRequested.current) return;
+    closeRequested.current = true;
+    // Under reduced motion there is no exit animation: close at once.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finishClose();
+      return;
+    }
+    setClosing(true);
+  }, [finishClose]);
+
+  // Safety net: if the exit animation never reports its end, still close.
+  useEffect(() => {
+    if (!closing) return;
+    const timer = window.setTimeout(finishClose, 500);
+    return () => window.clearTimeout(timer);
+  }, [closing, finishClose]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -67,14 +105,14 @@ export function GraveDrawer({
     // Escape fires "cancel". Keep React in charge of closing.
     const onCancel = (event: Event) => {
       event.preventDefault();
-      onCloseRef.current();
+      requestClose();
     };
     dialog.addEventListener("cancel", onCancel);
     return () => {
       dialog.removeEventListener("cancel", onCancel);
       if (dialog.open) dialog.close();
     };
-  }, []);
+  }, [requestClose]);
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLDialogElement>) => {
     if (event.key !== "Tab") return;
@@ -120,37 +158,44 @@ export function GraveDrawer({
 
   // A click on the dialog element itself (not its content) is a click on the backdrop.
   const onClick = (event: React.MouseEvent<HTMLDialogElement>) => {
-    if (event.target === dialogRef.current) onClose();
+    if (event.target === dialogRef.current) requestClose();
+  };
+
+  // Only the dialog's own exit animation ends the close, not a child's or the backdrop's.
+  const onAnimationEnd = (event: React.AnimationEvent<HTMLDialogElement>) => {
+    if (closing && event.target === event.currentTarget && event.animationName.startsWith("drawer-out")) {
+      finishClose();
+    }
   };
 
   const failing = status !== "alive";
+  const badgeTone = reviving ? "reviving" : failing ? "failing" : "alive";
 
   return (
     <dialog
       ref={dialogRef}
-      className="drawer"
+      className={closing ? "drawer drawer-closing" : "drawer"}
       aria-modal="true"
       aria-labelledby={headingId}
       onKeyDown={onKeyDown}
       onClick={onClick}
+      onAnimationEnd={onAnimationEnd}
     >
       <div className="drawer-top">
         <div className="drawer-header">
           <h2 id={headingId} ref={headingRef} tabIndex={-1} className="drawer-title">
             {name}
           </h2>
-          <button type="button" className="btn btn-secondary drawer-close" onClick={onClose}>
+          <button type="button" className="btn btn-secondary drawer-close" onClick={requestClose}>
             <span aria-hidden="true">{"\u00d7"}</span>
             Close
           </button>
         </div>
 
         <p className="drawer-badges">
-          <span
-            className={`drawer-status ${failing ? "drawer-status-failing" : "drawer-status-alive"}`}
-          >
-            <StatusIcon status={status} />
-            {STATUS_LABEL[status]}
+          <span className={`drawer-status drawer-status-${badgeTone}`}>
+            {reviving ? <RevivingIcon /> : <StatusIcon status={status} />}
+            {reviving ? "Reviving" : STATUS_LABEL[status]}
           </span>
           <span className="drawer-score">Death score {score} of 100</span>
         </p>

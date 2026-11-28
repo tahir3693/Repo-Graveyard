@@ -8,6 +8,7 @@ import { GraveyardHeader, type GraveyardBadge } from "@/components/GraveyardHead
 import { GraveyardScene } from "@/components/GraveyardScene";
 import { GraveyardSkeleton } from "@/components/GraveyardSkeleton";
 import { ResurrectArea } from "@/components/ResurrectArea";
+import { EmptyGraveArt } from "@/components/StateArt";
 import { GraveyardLegend } from "@/components/GraveyardLegend";
 import { GraveyardList } from "@/components/GraveyardList";
 import { ViewToggle } from "@/components/ViewToggle";
@@ -60,11 +61,16 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
   const [state, setState] = useState<ViewState>({ phase: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [openName, setOpenName] = useState<string | null>(null);
+  // The repo whose revival plan has arrived in the open drawer. Drawer-only: it makes the
+  // badge say "Reviving" and is cleared on close. The scores and statuses never change.
+  const [revivedName, setRevivedName] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [view, setView] = useState<GraveyardViewMode>(initialView);
   const stonesRef = useRef<HTMLDivElement>(null);
   const errorRef = useRef<HTMLHeadingElement>(null);
+  // The repo whose stone gets focus back when the drawer has closed.
+  const returnFocusTo = useRef<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -109,15 +115,24 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
     setAttempt((n) => n + 1);
   };
 
+  // The drawer calls this after its exit animation. Focus goes back to the stone that opened
+  // it, but only once the drawer has left the page (see the effect below): while a modal
+  // dialog is still open the page behind it cannot take focus.
   const closeDrawer = useCallback(() => {
-    const name = openName;
+    returnFocusTo.current = openName;
     setOpenName(null);
+    setRevivedName(null);
+  }, [openName]);
+
+  useEffect(() => {
+    if (openName !== null) return;
+    const name = returnFocusTo.current;
     if (name === null) return;
-    // Return focus to the stone that opened the drawer.
-    const stone = [...(stonesRef.current?.querySelectorAll<HTMLElement>("[data-repo]") ?? [])]
+    returnFocusTo.current = null;
+    [...(stonesRef.current?.querySelectorAll<HTMLElement>("[data-repo]") ?? [])]
       .find((item) => item.dataset.repo === name)
-      ?.querySelector("button");
-    requestAnimationFrame(() => stone?.focus());
+      ?.querySelector("button")
+      ?.focus();
   }, [openName]);
 
   if (state.phase === "loading") {
@@ -151,9 +166,12 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
     return (
       <>
         {header}
-        <p className="graveyard-message" role="status">
-          No repos to visit yet. The graveyard is empty, which is a good sign.
-        </p>
+        <div className="graveyard-message" role="status">
+          <EmptyGraveArt />
+          <p className="graveyard-message-text">
+            No repos to visit yet. The graveyard is empty, which is a good sign.
+          </p>
+        </div>
       </>
     );
   }
@@ -161,6 +179,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
   const open = entries.find((entry) => entry.repo.name === openName) ?? null;
   const emptyMessage = (
     <div className="graveyard-message graveyard-empty" role="status">
+      <EmptyGraveArt />
       <p className="graveyard-empty-title">No repos rest here.</p>
       <button type="button" className="btn btn-primary" onClick={() => setFilter("all")}>
         Show all
@@ -228,6 +247,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
           epitaph={open.tombstone.epitaph}
           facts={buildDrawerFacts(open.repo, open.tombstone)}
           url={open.repo.url}
+          reviving={revivedName === open.repo.name}
           onClose={closeDrawer}
         >
           <ResurrectArea
@@ -235,6 +255,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
             onResurrect={() => resurrectRepo(open.repo.name, { demo, sample: state.sampleData })}
             demo={demo}
             onFileIssue={(issue) => fileIssue(open.repo.name, issue)}
+            onRevived={() => setRevivedName(open.repo.name)}
           />
         </GraveDrawer>
       ) : null}

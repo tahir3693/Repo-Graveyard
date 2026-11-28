@@ -13,6 +13,9 @@
   overflow: hidden;
   min-height: 480px;
   background: var(--color-bg);
+  /* A short fade at the top, so the sky glow has no hard edge against the page. The moon
+     starts 24px down, so it is not dimmed. Only the alpha of the mask matters. */
+  mask-image: linear-gradient(to bottom, transparent, var(--color-bg) var(--space-6));
 }
 
 .sr-only {

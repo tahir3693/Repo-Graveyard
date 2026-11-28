@@ -51,8 +51,87 @@
   outline: none;
 }
 
+/*
+ * Hero stage: the hero text sits over a soft moon glow and two layers of fog that drift
+ * slowly. The layers are decorative and clipped to the stage, so they never cause a
+ * horizontal scroll, and they are kept faint so the muted note below the buttons still
+ * reads at 4.5:1 or better (checked in the audit, see design-system.md).
+ */
+.landing-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: var(--space-4) 0;
+}
+
+.landing-sky {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* Fade the layers out at the top and bottom of the stage, so the glow and the fog have
+     no hard edge where the stage ends. Only the alpha of the mask matters. */
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--color-bg) 28%,
+    var(--color-bg) 62%,
+    transparent
+  );
+}
+
+/* The moon glow is centered behind the title and fades out well before the buttons. */
+.landing-moon-glow {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(100%, 40rem);
+  aspect-ratio: 1;
+  background: radial-gradient(circle, var(--color-glow-soft) 0%, transparent 65%);
+  transform: translate(-50%, -30%);
+}
+
+.landing-fog {
+  position: absolute;
+  left: -25%;
+  width: 150%;
+  background:
+    radial-gradient(ellipse 30% 50% at 20% 50%, var(--color-text-muted) 0%, transparent 100%),
+    radial-gradient(ellipse 35% 45% at 65% 55%, var(--color-text-muted) 0%, transparent 100%);
+  animation-name: landing-drift;
+  animation-timing-function: var(--ease);
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  will-change: transform;
+}
+
+.landing-fog-back {
+  bottom: 22%;
+  height: 10rem;
+  opacity: 0.06;
+  animation-duration: 6000ms;
+}
+
+.landing-fog-front {
+  bottom: 0;
+  height: 8rem;
+  opacity: 0.09;
+  animation-duration: 4800ms;
+}
+
+@keyframes landing-drift {
+  from {
+    transform: translate3d(-6%, 0, 0);
+  }
+  to {
+    transform: translate3d(6%, 0, 0);
+  }
+}
+
 /* Hero */
 .landing-hero {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -100,6 +179,27 @@
    Button looks come from .btn in globals.css. */
 .landing-demo-form {
   display: contents;
+}
+
+/*
+ * The two hero buttons are the point of the page, so the main one glows at rest and
+ * brighter on hover, and the pair has room to breathe. The glow is a box-shadow only:
+ * nothing moves or resizes, and a press switches it off.
+ */
+.landing-actions .btn-primary {
+  box-shadow: var(--elevation-1);
+}
+
+.landing-actions .btn-primary:hover {
+  box-shadow: var(--elevation-2);
+}
+
+.landing-actions .btn-primary:active {
+  box-shadow: none;
+}
+
+.landing-actions .btn-secondary:hover {
+  box-shadow: var(--elevation-2);
 }
 
 .landing-error {
@@ -253,6 +353,14 @@
     justify-content: center;
     max-width: none;
     width: auto;
+  }
+}
+
+/* Reduced motion: the fog stands still where it is. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-fog {
+    animation: none;
+    will-change: auto;
   }
 }
 

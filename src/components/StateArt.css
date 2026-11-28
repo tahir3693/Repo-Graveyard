@@ -1,0 +1,87 @@
+/*
+ * State illustrations (lantern, empty grave). Tokens only: see .kiro/steering/design-system.md.
+ * Plain CSS with a state-art- prefix. Only opacity is animated, and only for the pulsing lantern.
+ */
+.state-art {
+  flex: none;
+  align-self: center;
+  width: calc(var(--space-16) + var(--space-8));
+  aspect-ratio: 4 / 5;
+  overflow: visible;
+}
+
+.state-art-line {
+  fill: none;
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.state-art-metal {
+  fill: var(--color-surface-2);
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.state-art-glass {
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.state-art-dashed {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 2;
+  stroke-dasharray: 3 4;
+  stroke-linecap: round;
+}
+
+.state-art-halo {
+  fill: var(--color-glow-faint);
+}
+
+.state-art-halo-core {
+  fill: var(--color-glow-soft);
+}
+
+.state-art-flame {
+  fill: var(--color-glow);
+}
+
+/* An unlit flame is only an outline: the lantern is waiting, not broken. */
+.state-art-flame-off {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+  stroke-dasharray: 2 3;
+  stroke-linecap: round;
+}
+
+.state-art-pulse .state-art-halo,
+.state-art-pulse .state-art-halo-core {
+  animation: state-art-breathe var(--motion-slow) var(--ease) infinite alternate;
+}
+
+.state-art-pulse .state-art-flame {
+  animation: state-art-breathe var(--motion-slow) var(--ease) infinite alternate;
+}
+
+@keyframes state-art-breathe {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state-art-pulse .state-art-halo,
+  .state-art-pulse .state-art-halo-core,
+  .state-art-pulse .state-art-flame {
+    animation: none;
+  }
+}

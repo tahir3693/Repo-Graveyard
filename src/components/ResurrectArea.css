@@ -27,15 +27,24 @@
   border: 0;
 }
 
-/* Stage: a small stone with fog panels that part to each side. */
+/*
+ * Stage: a small stone with an unlit candle, under two fog panels. When the plan arrives
+ * the candle lights, the fog parts to each side and one violet glow swells (the
+ * "resurrection moment", see design-system.md). The stage is decorative (aria-hidden) and
+ * never takes pointer events or focus.
+ */
 .resurrect-stage {
   position: relative;
   align-self: center;
   width: 160px;
   height: 160px;
   overflow: hidden;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg);
+  background:
+    radial-gradient(circle at 50% 75%, var(--color-glow-faint) 0%, transparent 70%),
+    var(--color-surface-2);
+  box-shadow: var(--elevation-1);
   pointer-events: none;
   order: 2;
 }
@@ -50,9 +59,23 @@
 }
 
 .resurrect-stone-body {
-  fill: var(--color-surface-raised);
-  stroke: var(--color-border);
+  fill: var(--color-surface);
+  stroke: var(--color-border-strong);
   stroke-width: 2;
+}
+
+/* The candle: wax and wick are always there, and the flame appears when the plan arrives. */
+.resurrect-wax {
+  fill: var(--color-text-muted);
+}
+
+.resurrect-wick {
+  stroke: var(--color-text);
+}
+
+.resurrect-flame {
+  fill: var(--color-glow);
+  filter: drop-shadow(0 0 var(--space-2) var(--color-glow));
 }
 
 .resurrect-stone-lit {
@@ -91,23 +114,17 @@
   right: 0;
 }
 
+/* Fog: a soft, partly see-through band of the muted text color, so the stone and the
+   candle show through it. (Framer Motion sets the layer's opacity, so the softness is in
+   the color itself.) */
 .resurrect-fog-body {
   width: 100%;
   height: 100%;
   background: radial-gradient(
     ellipse 90% 70% at 50% 55%,
-    var(--color-text-muted) 0%,
+    color-mix(in srgb, var(--color-text-muted) 60%, transparent) 0%,
     transparent 100%
   );
-  opacity: 1;
-}
-
-.resurrect-fog-left .resurrect-fog-body {
-  opacity: 0.55;
-}
-
-.resurrect-fog-right .resurrect-fog-body {
-  opacity: 0.45;
 }
 
 /* Buttons are .btn .btn-primary and .btn .btn-secondary (globals.css). While a request is

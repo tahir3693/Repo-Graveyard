@@ -1,6 +1,7 @@
 import type { Ref } from "react";
 import { graveyardErrorCopy } from "@/lib/graveyard/error-copy";
 import { SignInButton } from "@/components/SignInButton";
+import { LanternArt } from "@/components/StateArt";
 
 export interface GraveyardErrorProps {
   /** Typed error code from the API, or null when unknown. */
@@ -14,6 +15,7 @@ export function GraveyardError({ code, onRetry, titleRef }: GraveyardErrorProps)
   const copy = graveyardErrorCopy(code);
   return (
     <div className="graveyard-error" role="alert" data-error-kind={copy.kind}>
+      <LanternArt lit={false} />
       <h2 className="graveyard-error-title" tabIndex={-1} ref={titleRef}>
         {copy.title}
       </h2>

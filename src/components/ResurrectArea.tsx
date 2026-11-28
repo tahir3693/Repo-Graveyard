@@ -1,6 +1,6 @@
 "use client";
 
-import { MotionConfig, motion, useReducedMotion } from "framer-motion";
+import { MotionConfig, motion, useReducedMotion, type TargetAndTransition } from "framer-motion";
 import { useEffect, useId, useReducer, useRef, useState } from "react";
 import { copyToClipboard } from "@/lib/graveyard/clipboard";
 import type { FileIssueResult, IssueErrorCode } from "@/lib/graveyard/client";
@@ -11,7 +11,7 @@ import {
   resurrectReducer,
   type RevivalPlanData,
 } from "@/lib/graveyard/resurrect-state";
-import { RESURRECT_TIMING } from "@/lib/graveyard/resurrect-timing";
+import { FLAME_BREATH_SECONDS, momentSteps } from "@/lib/graveyard/resurrect-timing";
 import { ResurrectPlan, type CopyState, type IssueState } from "./ResurrectPlan";
 import "./ResurrectArea.css";
 
@@ -23,6 +23,8 @@ export interface ResurrectAreaProps {
   demo: boolean;
   /** Files the plan's issue through the server route. Resolves to a safe result, never throws. */
   onFileIssue: (issue: { title: string; body: string }) => Promise<FileIssueResult>;
+  /** Called once when the plan arrives, so the drawer badge can change to "Reviving". */
+  onRevived?: () => void;
 }
 
 const ISSUE_GENERIC =
@@ -59,6 +61,117 @@ export function issueErrorText(code: IssueErrorCode, retryAfterSeconds?: number)
 
 const ms = (value: number) => value / 1000;
 
+/** The stage: a stone with a candle under two fog panels. Decorative and never focusable. */
+export function ResurrectStage({ parted, loading, reduce }: { parted: boolean; loading: boolean; reduce: boolean }) {
+  /*
+   * The resurrection moment, on the stone in the drawer. It plays once, when the plan
+   * arrives, and never takes focus or blocks the plan (which starts to appear at 200ms):
+   *   the candle lights (0ms), the fog clears (250ms), one violet glow swells and settles
+   *   (500ms). The badge change lives in GraveDrawer. Under reduced motion every part
+   *   jumps straight to its final state.
+   */
+  const instant = { duration: 0 } as const;
+  const [candle, fog, glow] = momentSteps(reduce);
+  const transitionOf = (step: { delayMs: number; durationMs: number }) =>
+    reduce ? instant : { delay: ms(step.delayMs), duration: ms(step.durationMs), ease: "easeOut" as const };
+  const candleTransition = transitionOf(candle);
+  const fogTransition = transitionOf(fog);
+  const litTransition = transitionOf(glow);
+  // One swell (up, then down to a calm level) instead of a loop.
+  const glowAnimate: TargetAndTransition = reduce
+    ? { opacity: parted ? 0.6 : 0, scale: 1 }
+    : {
+        opacity: parted ? [0, 1, 0.6] : 0,
+        scale: parted ? [0.6, 1.15, 1] : 0.6,
+      };
+  const glowTransition = reduce ? instant : { ...litTransition, times: [0, 0.45, 1] };
+  // After it lights, the flame breathes slowly: a 2.4s period, never faster than 3 per second.
+  const flicker = parted && !reduce;
+
+  return (
+    <div className="resurrect-stage" aria-hidden="true">
+      <svg className="resurrect-stone" viewBox="0 0 80 100">
+        <path
+          className="resurrect-stone-body"
+          d="M8 100V40C8 18 22 6 40 6s32 12 32 34v60Z"
+        />
+        <motion.path
+          className="resurrect-stone-lit"
+          d="M8 100V40C8 18 22 6 40 6s32 12 32 34v60Z"
+          initial={false}
+          animate={{ opacity: parted ? 1 : 0 }}
+          transition={litTransition}
+        />
+        <rect className="resurrect-wax" x="35" y="72" width="10" height="24" rx="1" />
+        <line className="resurrect-wick" x1="40" y1="72" x2="40" y2="67" strokeWidth="1.5" />
+        <motion.g
+          initial={false}
+          animate={{ opacity: parted ? 1 : 0, scale: parted ? 1 : 0.2 }}
+          transition={candleTransition}
+          style={{ originX: 0.5, originY: 1 }}
+        >
+          <motion.path
+            className="resurrect-flame"
+            d="M40 52C44.5 58 45.5 63 40 67.5 34.5 63 35.5 58 40 52Z"
+            initial={false}
+            animate={flicker ? { scaleY: [1, 1.08, 0.96, 1.05, 1] } : { scaleY: 1 }}
+            transition={
+              flicker
+                ? {
+                    delay: ms(candle.delayMs + candle.durationMs),
+                    duration: FLAME_BREATH_SECONDS,
+                    ease: "easeInOut",
+                    repeat: Infinity,
+                    times: [0, 0.25, 0.5, 0.75, 1],
+                  }
+                : instant
+            }
+            style={{ originX: 0.5, originY: 1 }}
+          />
+        </motion.g>
+      </svg>
+      <motion.div
+        className="resurrect-glow"
+        initial={false}
+        animate={glowAnimate}
+        transition={glowTransition}
+      />
+      <motion.div
+        className="resurrect-fog resurrect-fog-left"
+        initial={false}
+        animate={{ x: parted ? "-100%" : "0%", opacity: parted ? 0 : 1 }}
+        transition={fogTransition}
+      >
+        <motion.div
+          className="resurrect-fog-body"
+          animate={{ opacity: loading && !reduce ? [0.7, 1, 0.7] : 1 }}
+          transition={
+            loading && !reduce
+              ? { duration: 3.6, ease: "easeInOut", repeat: Infinity }
+              : { duration: 0 }
+          }
+        />
+      </motion.div>
+      <motion.div
+        className="resurrect-fog resurrect-fog-right"
+        initial={false}
+        animate={{ x: parted ? "100%" : "0%", opacity: parted ? 0 : 1 }}
+        transition={fogTransition}
+      >
+        <motion.div
+          className="resurrect-fog-body"
+          animate={{ opacity: loading && !reduce ? [1, 0.7, 1] : 1 }}
+          transition={
+            loading && !reduce
+              ? { duration: 3.6, ease: "easeInOut", repeat: Infinity }
+              : { duration: 0 }
+          }
+        />
+      </motion.div>
+    </div>
+  );
+}
+
 /**
  * Resurrect button, the fog-parting stage and the revival plan.
  * Success: fog parts (700ms), the stone glows (from 300ms), then the plan fades in
@@ -70,6 +183,7 @@ export function ResurrectArea({
   onResurrect,
   demo,
   onFileIssue,
+  onRevived,
 }: ResurrectAreaProps) {
   const reduce = useReducedMotion() === true;
   const [state, dispatch] = useReducer(resurrectReducer, initialResurrectState);
@@ -103,7 +217,10 @@ export function ResurrectArea({
     dispatch({ type: "start" });
     try {
       const plan = await onResurrect();
-      if (mounted.current) dispatch({ type: "succeed", plan });
+      if (mounted.current) {
+        dispatch({ type: "succeed", plan });
+        onRevived?.();
+      }
     } catch {
       if (mounted.current) dispatch({ type: "fail" });
     }
@@ -140,79 +257,13 @@ export function ResurrectArea({
     );
   };
 
-  const t = RESURRECT_TIMING;
   const parted = state.phase === "success";
   const loading = state.phase === "loading";
-  const fadeOnly = { duration: ms(t.reducedMs), ease: "easeOut" } as const;
-
-  const fogTransition = reduce
-    ? fadeOnly
-    : { duration: ms(parted ? t.fogPartMs : 400), ease: "easeOut" as const };
-  const glowTransition = reduce
-    ? fadeOnly
-    : {
-        delay: parted ? ms(t.glowDelayMs) : 0,
-        duration: ms(t.glowMs),
-        ease: "easeOut" as const,
-      };
 
   return (
     <MotionConfig reducedMotion="user">
       <section className="resurrect" aria-label={`Resurrect ${repoName}`}>
-        <div className="resurrect-stage" aria-hidden="true">
-          <svg className="resurrect-stone" viewBox="0 0 80 100">
-            <path
-              className="resurrect-stone-body"
-              d="M8 100V40C8 18 22 6 40 6s32 12 32 34v60Z"
-            />
-            <motion.path
-              className="resurrect-stone-lit"
-              d="M8 100V40C8 18 22 6 40 6s32 12 32 34v60Z"
-              initial={false}
-              animate={{ opacity: parted ? 1 : 0 }}
-              transition={glowTransition}
-            />
-          </svg>
-          <motion.div
-            className="resurrect-glow"
-            initial={false}
-            animate={{ opacity: parted ? 1 : 0, scale: parted ? 1 : 0.6 }}
-            transition={glowTransition}
-          />
-          <motion.div
-            className="resurrect-fog resurrect-fog-left"
-            initial={false}
-            animate={{ x: parted ? "-100%" : "0%", opacity: parted ? 0 : 1 }}
-            transition={fogTransition}
-          >
-            <motion.div
-              className="resurrect-fog-body"
-              animate={{ opacity: loading && !reduce ? [0.7, 1, 0.7] : 1 }}
-              transition={
-                loading && !reduce
-                  ? { duration: 3.6, ease: "easeInOut", repeat: Infinity }
-                  : { duration: 0 }
-              }
-            />
-          </motion.div>
-          <motion.div
-            className="resurrect-fog resurrect-fog-right"
-            initial={false}
-            animate={{ x: parted ? "100%" : "0%", opacity: parted ? 0 : 1 }}
-            transition={fogTransition}
-          >
-            <motion.div
-              className="resurrect-fog-body"
-              animate={{ opacity: loading && !reduce ? [1, 0.7, 1] : 1 }}
-              transition={
-                loading && !reduce
-                  ? { duration: 3.6, ease: "easeInOut", repeat: Infinity }
-                  : { duration: 0 }
-              }
-            />
-          </motion.div>
-        </div>
-
+        <ResurrectStage parted={parted} loading={loading} reduce={reduce} />
         {state.phase !== "success" ? (
           // One persistent button for idle, loading and error, so keyboard focus stays on it
           // while the request runs. aria-disabled (not disabled) keeps it focusable.
@@ -274,7 +325,7 @@ export function ResurrectArea({
         {state.phase === "success" ? (
           <>
             <p className="resurrect-sr-only" role="status">
-              Revival plan ready for {repoName}.
+              Revival plan ready for {repoName}. Status: reviving.
             </p>
             {/* Each plan section reveals itself, about 60ms apart (see ResurrectPlan). */}
             <div className="resurrect-plan">

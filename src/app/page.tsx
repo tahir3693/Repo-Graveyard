@@ -52,20 +52,29 @@ export default function Home({ searchParams }: { searchParams: SearchParams }) {
         </header>
 
         <main id="main" tabIndex={-1} className="landing-main">
-          <section className="landing-hero" aria-labelledby="landing-title">
-            <h1 id="landing-title" className="landing-title">
-              Repo Graveyard
-            </h1>
-            <p className="landing-tagline">
-              Find your dead repos and get a plan to revive them.
-            </p>
-            <Suspense fallback={<LandingActions login={null} errorMessage={null} />}>
-              <LandingActionsForRequest searchParams={searchParams} />
-            </Suspense>
-            <p className="landing-note">
-              No account needed for the demo. We only read public repos.
-            </p>
-          </section>
+          {/* The stage holds the hero text over a soft moon glow and two slow fog layers.
+              The layers are decorative (aria-hidden) and add no tab stops. */}
+          <div className="landing-stage">
+            <div className="landing-sky" aria-hidden="true">
+              <span className="landing-moon-glow" />
+              <span className="landing-fog landing-fog-back" />
+              <span className="landing-fog landing-fog-front" />
+            </div>
+            <section className="landing-hero" aria-labelledby="landing-title">
+              <h1 id="landing-title" className="landing-title">
+                Repo Graveyard
+              </h1>
+              <p className="landing-tagline">
+                Find your dead repos and get a plan to revive them.
+              </p>
+              <Suspense fallback={<LandingActions login={null} errorMessage={null} />}>
+                <LandingActionsForRequest searchParams={searchParams} />
+              </Suspense>
+              <p className="landing-note">
+                No account needed for the demo. We only read public repos.
+              </p>
+            </section>
+          </div>
 
           {/* Decorative sample stones. inert keeps their buttons out of the tab order. */}
           <section className="landing-preview" aria-hidden="true" inert>

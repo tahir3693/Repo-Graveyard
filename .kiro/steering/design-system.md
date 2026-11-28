@@ -95,8 +95,10 @@ Radius has two sizes:
 - `--radius-full: 9999px` for dots, circles and progress bars only, never for chips or buttons
 
 Elevation has two levels. Both are soft violet glows, never dark drop shadows:
-- `--elevation-1: 0 0 var(--space-4) var(--color-glow-faint)` for raised cards and button hover
-- `--elevation-2: 0 0 var(--space-6) var(--color-glow-soft)` for the drawer, a hovered stone and overlays
+- `--elevation-1: 0 0 var(--space-4) var(--color-glow-faint)` for raised cards, a resting stone and button hover
+- `--elevation-2: 0 0 var(--space-6) var(--color-glow-soft)` for the drawer, a hovered or focused stone, a pulsing badge and overlays
+
+One more shadow token is not an elevation level: `--press-inset: inset 0 0 var(--space-3) var(--color-glow-soft)` is the inset glow of a pressed secondary button. It makes the button look pushed in without moving it.
 
 ## Buttons
 
@@ -113,7 +115,8 @@ Rules:
 - Hover, press and focus change only color, edge color and glow. Never change size, padding, border width or position, so nothing shifts. The border is always 1px, and transparent on the quiet style.
 - Focus shows `outline: var(--focus-ring)` with `outline-offset: var(--focus-ring-offset)` on every control. The base `:focus-visible` rule in `globals.css` applies it to links, buttons, selects, summaries and inputs.
 - Disabled uses `disabled` or `aria-disabled="true"`. Prefer `aria-disabled` when the control must stay focusable, and give the reason in text (`aria-describedby`).
-- A toggle (filter chips, view toggle) is a `.btn .btn-secondary` with `aria-pressed`. On, it takes the primary look and shows a check mark in its markup, so it never relies on color alone.
+- A toggle (filter chips, view toggle) is a `.btn .btn-secondary` with `aria-pressed`. On, it takes the primary look with a soft glow (`--elevation-1`, `--elevation-2` on hover) and shows a check mark in its markup, so it never relies on color alone. Pressing a toggle that is on shows `--color-glow-active` with no glow. A secondary button that is pressed adds `--press-inset`. So off, on and pressed look different.
+- The hero buttons on the landing page glow at rest (`--elevation-1` on the primary) and brighter on hover. The glow is a shadow only, so nothing moves.
 - One primary button per panel. Put the second action in `.btn-secondary` and the third in `.btn-quiet`.
 
 ## Motion
@@ -126,6 +129,36 @@ Motion is short, calm and ambient. It never blocks reading or interaction.
 - Animate `opacity`, `transform` and `box-shadow` only, where possible.
 - **Always honor `prefers-reduced-motion: reduce`.** `globals.css` forces every animation and transition to end at once, with no delay and no smooth scrolling. Loops (fog drift, flicker, floating) stop. State must still be readable with no motion.
 - Framer Motion: use `useReducedMotion()` or `MotionConfig reducedMotion="user"` at the app root.
+- Ambient fog drifts on the landing hero, in the scene and on stones (transform only, 4.8s to 6s, back and forth). It stands still under reduced motion.
+- The drawer rises and fades in over `--motion-base`, and leaves the same way. It tells its parent it is closed only after the exit has played, so focus returns to the stone after the animation. Under reduced motion it closes at once.
+
+## Resurrection moment
+
+The signature moment of the app. When a revival plan arrives, the stone in the drawer plays one short sequence. It lasts under 2 seconds (1.4s in code), plays once, and `RESURRECT_TIMING` in `src/lib/graveyard/resurrect-timing.ts` holds every number.
+
+| Time | What happens |
+|---|---|
+| 0 ms | The candle lights (a flame grows in, 450ms). The drawer badge changes from its death state to **Reviving**, with a flame shape instead of the death shape. |
+| 200 ms | The plan sections start to appear, 60ms apart, so the plan never waits for the stone. |
+| 250 ms | The fog panels part to each side (800ms). |
+| 500 ms | One violet glow swells and settles to a calm level (900ms). The badge glow swells with it. |
+
+Rules:
+- It never takes focus, and nothing in it is focusable. The plan heading takes focus, as before. It never blocks the plan or any control.
+- Under reduced motion every part jumps to its end state with no animation: flame lit, fog gone, glow settled, badge reading Reviving, plan visible.
+- **Reviving is a drawer label, not a status.** The death score, the status and the cause of death come from the rules and do not change. The label is cleared when the drawer closes.
+- The candle here marks the revival state, not repo activity (that is the candle on the stone in the scene). The text equivalents are the "Reviving" badge and the status line "Revival plan ready for {repo}. Status: reviving." announced to screen readers.
+- After it lights, the flame breathes slowly (2.4s period, never faster than 3 changes per second). This stops under reduced motion.
+
+## Illustrations for states
+
+Loading, empty and error screens carry one small illustration (64px wide), drawn in SVG with tokens, never emoji. Each one is `aria-hidden`: the text beside it says the same thing.
+
+- Lantern, lit and breathing: loading, and not signed in (an invitation).
+- Lantern, unlit (an outline of a flame): errors. The lantern is waiting, not broken.
+- Empty grave (an arch with a dashed inscription outline and a low mound): no repos, or no repos for a filter.
+
+They live in `src/components/StateArt.tsx`. Only opacity animates, and it stops under reduced motion.
 
 ## Visual vocabulary
 

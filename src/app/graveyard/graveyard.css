@@ -84,11 +84,12 @@
   padding: 0 var(--space-4);
 }
 
+/* 12px between chips (not 8px), so two neighbouring 44px targets are easy to tell apart. */
 .graveyard-chips {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 /* Filter chips and the view toggle are .btn .btn-secondary buttons (globals.css). Their
@@ -155,11 +156,13 @@
   padding-bottom: var(--space-16);
 }
 
-/* 1 column on phones, 2 on tablets, 3 on desktop, 4 on wide desktop. Equal gaps. */
+/* 1 column on phones, 2 on tablets, 3 on desktop, 4 on wide desktop. Every column is the
+   same width and every gap is the same, so the rows keep an even, calm rhythm: the rows
+   are further apart than the columns, so each row reads as its own line of graves. */
 .graveyard-stones {
   display: grid;
   grid-template-columns: minmax(0, 16rem);
-  gap: var(--space-6);
+  gap: var(--space-8);
   justify-content: center;
   justify-items: center;
   margin: 0 auto;
@@ -263,9 +266,8 @@
   text-align: center;
 }
 
-.graveyard-message {
-  flex-direction: row;
-  justify-content: center;
+.graveyard-message-text {
+  margin: 0;
 }
 
 .graveyard-message-icon {
@@ -320,6 +322,7 @@
 @media (min-width: 640px) {
   .graveyard-stones {
     grid-template-columns: repeat(2, minmax(0, 16rem));
+    gap: var(--space-12) var(--space-6);
   }
 
   .graveyard-header,
@@ -383,7 +386,7 @@
 .graveyard-view-toggle {
   display: flex;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
 }
 
 /* List view: a plain table. Row, header and cell text stay at 16px or more. */
@@ -415,8 +418,11 @@
   color: var(--color-text-muted);
   font-weight: 600;
 }
+/* Hover: a lighter row and a violet edge on the left, so the row is easy to follow. An
+   inset shadow draws the edge, so nothing moves. */
 .graveyard-table tbody tr:hover {
-  background: var(--color-surface-raised);
+  background: var(--color-surface-2);
+  box-shadow: inset var(--space-1) 0 0 var(--color-glow);
 }
 .graveyard-table-repo {
   font-weight: 600;

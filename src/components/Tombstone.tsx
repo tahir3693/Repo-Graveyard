@@ -46,6 +46,18 @@ export function StatusIcon({ status }: { status: TombstoneStatus }) {
   );
 }
 
+/**
+ * The shape for "Reviving": a flame. It replaces the death shape in the drawer badge once
+ * a revival plan has arrived, so the change never relies on color alone.
+ */
+export function RevivingIcon() {
+  return (
+    <svg className="tombstone-status-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 1.5C11.2 6 12 9.5 8 14 4 9.5 4.8 6 8 1.5Z" />
+    </svg>
+  );
+}
+
 const FLICKER_OPACITY = [0.55, 1, 0.7, 0.95, 0.55];
 const FLICKER_SCALE = [1, 1.06, 0.98, 1.04, 1];
 
@@ -182,10 +194,16 @@ export function Tombstone({
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
         transition={{ duration: reduce ? 0.15 : 0.4, ease: "easeOut" }}
+        // A small lift on hover and on keyboard focus. Transform only, so nothing shifts.
         whileHover={
           reduce
             ? undefined
-            : { y: -4, transition: { duration: 0.2, ease: "easeOut" } }
+            : { y: -4, transition: { duration: 0.15, ease: "easeOut" } }
+        }
+        whileFocus={
+          reduce
+            ? undefined
+            : { y: -4, transition: { duration: 0.15, ease: "easeOut" } }
         }
       >
         <span className="tombstone-ring" aria-hidden="true" />

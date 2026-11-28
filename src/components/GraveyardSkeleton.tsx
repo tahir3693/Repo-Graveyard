@@ -1,9 +1,15 @@
+import { LanternArt } from "./StateArt";
+
 const PLACEHOLDERS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
 
-/** Loading state: skeleton tombstones that pulse gently (and stand still under reduced motion). */
+/**
+ * Loading state: a lantern that breathes, then skeleton tombstones that pulse gently.
+ * Both stand still under reduced motion.
+ */
 export function GraveyardSkeleton() {
   return (
     <div className="graveyard-skeleton-wrap">
+      <LanternArt lit pulsing />
       <p className="graveyard-loading" role="status">
         Digging up the graveyard{"\u2026"}
       </p>
