@@ -8,7 +8,8 @@
  * `scoreRepo(repo: RepoHealth)`.
  */
 import { z } from "zod";
-import type { RevivalPlanData } from "@/lib/graveyard/resurrect-state";
+import { toPlanData, type RevivalPlanData } from "@/lib/graveyard/resurrect-state";
+import { RevivalPlanSchema } from "@/lib/resurrection/plan";
 import { IssueSuccessSchema } from "@/lib/resurrection/response";
 
 const ScannedRepoSchema = z.strictObject({
@@ -41,27 +42,7 @@ export const ScanSuccessSchema = z.object({
 export type ScanSuccess = z.infer<typeof ScanSuccessSchema>;
 export type ScannedRepo = ScanSuccess["repos"][number];
 
-/** Plan length caps from the resurrection requirements (PLAN_*_MAX). */
-const PLAN_LIMITS = { diagnosis: 600, step: 300, title: 100, body: 4000 } as const;
-
-const codePoints = (s: string) => [...s].length;
-
-const boundedText = (max: number) =>
-  z
-    .string()
-    .refine((s) => s.trim().length > 0, "must not be blank")
-    .refine((s) => codePoints(s) <= max, "too long");
-
-export const EFFORTS = ["under 1 hour", "a weekend", "a week or more"] as const;
-
-export const RevivalPlanSchema = z.object({
-  diagnosis: boundedText(PLAN_LIMITS.diagnosis),
-  smallestNextStep: boundedText(PLAN_LIMITS.step),
-  effort: z.enum(EFFORTS),
-  issueTitle: boundedText(PLAN_LIMITS.title).refine((s) => !/[\r\n]/.test(s), "one line"),
-  issueBody: boundedText(PLAN_LIMITS.body),
-});
-
+/** The response uses the server's plan schema, so the two cannot drift apart. */
 export const ResurrectResponseSchema = z.object({
   plan: RevivalPlanSchema,
   source: z.enum(["ai", "fallback"]),
@@ -169,7 +150,8 @@ export async function resurrectRepo(
   const json = await postJson("/api/resurrect", body, fetchImpl);
   const parsed = ResurrectResponseSchema.safeParse(json);
   if (!parsed.success) throw new GraveyardRequestError("invalid");
-  return parsed.data.source === "fallback" ? { ...parsed.data.plan, fallback: true } : parsed.data.plan;
+  const data = toPlanData(parsed.data.plan);
+  return parsed.data.source === "fallback" ? { ...data, fallback: true } : data;
 }
 
 /**

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as fc from "fast-check";
+import { toPlanData } from "@/lib/graveyard/resurrect-state";
+import type { RevivalPlan } from "@/lib/resurrection/plan";
 import {
   GraveyardRequestError,
   resurrectRepo,
@@ -23,13 +25,36 @@ const REPO = {
 
 const SCAN = { mode: "demo", repos: [REPO], skippedForks: 0, skippedInvalid: 0, truncated: false };
 
-const PLAN = {
-  diagnosis: "Paused after the dependencies drifted.",
-  smallestNextStep: "Bump the dependencies and run the tests.",
-  effort: "a weekend",
-  issueTitle: "Revive todo-app",
-  issueBody: "Start with the lockfile.",
+/** The wire shape. Built here because client tests may not import server-only fixtures. */
+const PLAN: RevivalPlan = {
+  verdict: { decision: "revive", reason: "One small step can wake it." },
+  diagnosis: "todo-app is quiet, and its last commit was 412 days ago. CI is failing. It is paused, not gone.",
+  roadmap: [
+    {
+      title: "Read the first red check",
+      action: "Open the latest failing check and read its first error line.",
+      effort: "15 min",
+      why: "One error line shows where the repo stopped.",
+    },
+    {
+      title: "Fix the first red check",
+      action: "Fix that one error and push.",
+      effort: "half a day",
+      why: "Green checks make later changes safe.",
+    },
+    { title: "Run it once", action: "Run the project once.", effort: "15 min", why: "It shows what survived." },
+  ],
+  quickWins: ["Read the first error line.", "Add one README line."],
+  risks: ["Fixing one check may reveal more."],
+  effort: { level: "medium", total: "about a day" },
+  issue: {
+    title: "Revive todo-app: get the checks green",
+    body: "Paused, not gone.\n\n- [ ] Read the first red check\n- [ ] Fix the first red check\n- [ ] Run it once",
+    labels: ["revival"],
+  },
 };
+/** What the drawer gets: the flat fields plus the full plan. */
+const PLAN_DATA = toPlanData(PLAN);
 
 type Call = { url: string; init: RequestInit };
 
@@ -118,12 +143,14 @@ describe("resurrectRepo", () => {
     const plan = await resurrectRepo("todo-app", { demo: true }, fetch);
     expect(calls[0].url).toBe("/api/resurrect");
     expect(sentBody(calls[0])).toEqual({ repo: "todo-app", demo: true });
-    expect(plan).toEqual(PLAN);
+    expect(plan).toEqual(PLAN_DATA);
+    expect(plan.smallestNextStep).toBe(PLAN.roadmap[0].action);
+    expect(plan.issueBody).toBe(PLAN.issue.body);
   });
 
   it("marks a fallback plan so the UI can say it is rule-based", async () => {
     const { fetch } = fakeFetch({ plan: PLAN, source: "fallback", fallbackReason: "llm_unavailable" });
-    expect(await resurrectRepo("todo-app", { demo: false }, fetch)).toEqual({ ...PLAN, fallback: true });
+    expect(await resurrectRepo("todo-app", { demo: false }, fetch)).toEqual({ ...PLAN_DATA, fallback: true });
   });
   it("sends only the flag and the name for sample repos", async () => {
     const { fetch, calls } = fakeFetch({ plan: PLAN, source: "ai" });
@@ -144,8 +171,23 @@ describe("resurrectRepo", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("rejects a plan with an unknown effort or a blank field", async () => {
-    for (const plan of [{ ...PLAN, effort: "soon" }, { ...PLAN, diagnosis: "   " }]) {
+  it("rejects an old-shape plan, an unknown effort level, a blank field or a missing section", async () => {
+    const { roadmap: _roadmap, ...withoutRoadmap } = PLAN;
+    void _roadmap;
+    const oldShape = {
+      diagnosis: "Paused.",
+      smallestNextStep: "Run it.",
+      effort: "a weekend",
+      issueTitle: "Revive",
+      issueBody: "- [ ] go",
+    };
+    for (const plan of [
+      oldShape,
+      { ...PLAN, effort: { level: "soon", total: "x" } },
+      { ...PLAN, diagnosis: "   " },
+      withoutRoadmap,
+      { ...PLAN, diagnosis: "see https://e.com" },
+    ]) {
       const { fetch } = fakeFetch({ plan, source: "ai" });
       await expect(resurrectRepo("todo-app", { demo: true }, fetch)).rejects.toMatchObject({
         kind: "invalid",

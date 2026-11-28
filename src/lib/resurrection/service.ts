@@ -10,10 +10,10 @@ import { runAttempts, toFallbackReason } from "./attempts";
 import type { ResurrectionConfig } from "./config";
 import { getSampleContext } from "@/lib/demo/sample-context";
 import { capBundle, deriveRepoHealth, type RawContext } from "./context";
-import { buildFallbackPlan } from "./fallback";
+import { buildFallbackPlan, fallbackFactsFromBundle } from "./fallback";
 import { gatherContext } from "./gather";
 import { RESURRECTION_LIMITS } from "./limits";
-import type { RevivalPlan } from "./plan";
+import { planStrings, type RevivalPlan } from "./plan";
 import { buildPrompt } from "./prompt";
 import type { ReadRequester } from "./read-only";
 import type { FallbackReason } from "./response";
@@ -35,7 +35,7 @@ export type ResurrectInput = { owner: string; repo: string; now: Date };
 const MIN_SECRET_LENGTH = 8;
 
 function planContainsSecret(plan: RevivalPlan, secrets: readonly string[]): boolean {
-  const texts = [plan.diagnosis, plan.smallestNextStep, plan.effort, plan.issueTitle, plan.issueBody];
+  const texts = planStrings(plan);
   return secrets.some(
     (secret) => secret.length >= MIN_SECRET_LENGTH && texts.some((text) => text.includes(secret)),
   );
@@ -70,8 +70,7 @@ async function planFromContext(
   const tombstone = scoreRepo(health, input.now);
   const bundle = capBundle(raw, tombstone, health);
   const prompt = buildPrompt(bundle);
-  const fallback = () =>
-    buildFallbackPlan({ name: bundle.name, causeCode: bundle.causeCode, status: bundle.status });
+  const fallback = () => buildFallbackPlan(fallbackFactsFromBundle(bundle));
 
   const client = deps.makeLlmClient();
   if (client === null) {

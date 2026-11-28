@@ -83,15 +83,42 @@ export const DEMO_SCAN_RESPONSE = {
 /** The repo the test opens and resurrects. */
 export const TARGET_REPO = "todo-app";
 
+/** The wire shape of /api/resurrect. The drawer shows roadmap[0].action as the smallest next step. */
 export const MOCK_PLAN = {
+  verdict: {
+    decision: "revive" as const,
+    reason: "Quiet for a long while, yet one small step can wake it.",
+  },
   diagnosis:
     "Paused after the dependencies drifted out of date. Nothing here is broken beyond repair.",
-  smallestNextStep:
-    "Bump the dependencies, run the tests, and fix the first red one.",
-  effort: "a weekend" as const,
-  issueTitle: "Revive todo-app: update dependencies",
-  issueBody:
-    "Start with the lockfile, then re-run CI and fix whatever turns red first.",
+  roadmap: [
+    {
+      title: "List the outdated dependencies",
+      action: "Bump the dependencies, run the tests, and fix the first red one.",
+      effort: "15 min",
+      why: "A short list turns a vague worry into a first target.",
+    },
+    {
+      title: "Update one dependency",
+      action: "Update that one package and run the project.",
+      effort: "1 hour",
+      why: "One package at a time keeps breakage easy to trace.",
+    },
+    {
+      title: "Run it once",
+      action: "Run the project once and add one README line.",
+      effort: "15 min",
+      why: "A single run shows what survived the silence.",
+    },
+  ],
+  quickWins: ["Update one outdated dependency.", "Add one README line."],
+  risks: ["Updating can break the build, so go one package at a time."],
+  effort: { level: "medium" as const, total: "about a day" },
+  issue: {
+    title: "Revive todo-app: update dependencies",
+    body: "Start with the lockfile, then re-run CI and fix whatever turns red first.\n\n- [ ] List the outdated dependencies\n- [ ] Update one dependency\n- [ ] Run it once",
+    labels: ["revival", "dependencies"],
+  },
 };
 
 export const MOCK_RESURRECT_RESPONSE = {

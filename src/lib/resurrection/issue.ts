@@ -8,7 +8,7 @@ import type { IssueWriter } from "@/lib/github/issue-writer";
 import { RESURRECTION_LIMITS } from "./limits";
 import { mapGitHubFailure, type RouteFailure } from "./errors";
 import { IssueCreatedSchema } from "./github-schemas";
-import { boundedText, sanitizePlanText } from "./plan";
+import { boundedText, cleanModelText } from "./plan";
 
 export const ISSUE_FOOTER = "Drafted by Repo Graveyard. This repo is only paused.";
 
@@ -21,8 +21,9 @@ export type PreparedIssue = { ok: true; title: string; body: string } | { ok: fa
 
 export function prepareIssue(title: string, body: string): PreparedIssue {
   if (typeof title !== "string" || typeof body !== "string") return { ok: false };
-  const cleanTitle = sanitizePlanText(title);
-  const cleanBody = sanitizePlanText(body);
+  // Same cleaning as model output: no HTML, images, mentions or links reach GitHub.
+  const cleanTitle = cleanModelText(title);
+  const cleanBody = cleanModelText(body);
   if (!TitleSchema.safeParse(cleanTitle).success) return { ok: false };
   if (!BodySchema.safeParse(cleanBody).success) return { ok: false };
   return { ok: true, title: cleanTitle, body: `${cleanBody}\n\n${ISSUE_FOOTER}` };

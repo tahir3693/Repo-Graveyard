@@ -1,13 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { VALID_PLAN } from "./plan.fixtures";
 import { IssueSuccessSchema, ResurrectSuccessSchema } from "./response";
 
-const plan = {
-  diagnosis: "d",
-  smallestNextStep: "s",
-  effort: "a weekend",
-  issueTitle: "t",
-  issueBody: "b",
-};
+const plan = VALID_PLAN;
 
 describe("ResurrectSuccessSchema", () => {
   it("requires fallbackReason exactly when source is fallback", () => {

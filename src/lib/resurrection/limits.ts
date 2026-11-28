@@ -9,7 +9,8 @@ export const RESURRECTION_LIMITS = {
   LLM_MAX_ATTEMPTS: 2,
   CLIENT_TIMEOUT_MS: 30_000,
   ISSUE_CLIENT_TIMEOUT_MS: 15_000,
-  LLM_MAX_OUTPUT_TOKENS: 1_500,
+  // About 6 seconds of output on Flash-Lite. The prompt asks for a reply under 3,500 characters.
+  LLM_MAX_OUTPUT_TOKENS: 1_200,
   LLM_TEMPERATURE: 0.3,
   LLM_RAW_MAX_CHARS: 20_000,
   CAP_NAME: 100,
@@ -33,6 +34,28 @@ export const RESURRECTION_LIMITS = {
   REQUEST_BODY_MAX_BYTES: 20_000,
   MAX_TRACKED_KEYS: 1_000,
   FOG_REVEAL_MS: 800,
+} as const;
+
+/**
+ * Field caps of the revival plan, in code points. The top-level text caps
+ * (diagnosis, issue title and body, roadmap action) stay in RESURRECTION_LIMITS.
+ */
+export const PLAN_FIELD_LIMITS = {
+  VERDICT_REASON: 200,
+  ROADMAP_MIN: 3,
+  ROADMAP_MAX: 5,
+  STEP_TITLE: 80,
+  STEP_EFFORT: 40,
+  STEP_WHY: 200,
+  QUICK_WINS_MIN: 2,
+  QUICK_WINS_MAX: 3,
+  QUICK_WIN: 120,
+  RISKS_MIN: 1,
+  RISKS_MAX: 3,
+  RISK: 160,
+  EFFORT_TOTAL: 60,
+  LABELS_MAX: 3,
+  LABEL: 30,
 } as const;
 
 export type WindowConfig = { limit: number; windowMs: number };

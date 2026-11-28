@@ -1,14 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { LlmResult } from "@/lib/llm";
 import { runAttempts, toFallbackReason } from "./attempts";
+import { VALID_PLAN_TEXT } from "./plan.fixtures";
 
-const VALID = JSON.stringify({
-  diagnosis: "Paused.",
-  smallestNextStep: "Run it.",
-  effort: "a weekend",
-  issueTitle: "Revive it",
-  issueBody: "- [ ] go",
-});
+const VALID = VALID_PLAN_TEXT;
 const good: LlmResult = { ok: true, text: VALID };
 const bad: LlmResult = { ok: true, text: "not json" };
 const timeout: LlmResult = { ok: false, kind: "timeout" };

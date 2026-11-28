@@ -7,6 +7,7 @@ import { ResurrectionErrorSchema } from "./errors";
 import { handleResurrect, type ResurrectDeps } from "./handle-resurrect";
 import { createInFlightSet } from "./inflight";
 import { DEMO_RESURRECT_LIMIT, ISSUE_LIMIT, RESURRECT_LIMIT } from "./limits";
+import { VALID_PLAN } from "./plan.fixtures";
 import { createRateLimitStore } from "./rate-limit";
 import { ResurrectSuccessSchema } from "./response";
 import { createFakeLlm, type FakeLlm, type FakeLlmStep } from "./test-utils/fake-llm";
@@ -30,14 +31,6 @@ const META = {
   pushed_at: "2024-01-01T00:00:00Z",
   default_branch: "main",
   owner: { login: "octocat" },
-};
-
-const VALID_PLAN = {
-  diagnosis: "Paused with a clear next step.",
-  smallestNextStep: "Run the project once.",
-  effort: "a weekend",
-  issueTitle: "Revive todo-app",
-  issueBody: "Intro.\n\n- [ ] Run it",
 };
 
 const HOSTILE_README =
@@ -421,7 +414,10 @@ describe("handleResurrect hostile README end to end", () => {
 
   it("applies the same defense in demo mode with the demo token", async () => {
     const step: FakeLlmStep = {
-      text: JSON.stringify({ ...VALID_PLAN, issueBody: `token ${DEMO_TOKEN}` }),
+      text: JSON.stringify({
+        ...VALID_PLAN,
+        issue: { ...VALID_PLAN.issue, body: `token ${DEMO_TOKEN}\n- [ ] a\n- [ ] b\n- [ ] c` },
+      }),
     };
     const h = makeHarness({ env: DEMO_ENV, readme: HOSTILE_README, llmSteps: [step] });
     const res = await handleResurrect(h.deps, post({ repo: "todo-app", demo: true }));

@@ -3,7 +3,17 @@ import { ResurrectResponseSchema } from "@/lib/graveyard/client";
 import { buildFallbackPlan } from "./fallback";
 import { ResurrectSuccessSchema } from "./response";
 
-const plan = buildFallbackPlan({ name: "todo-app", causeCode: "archived", status: "dead" });
+const plan = buildFallbackPlan({
+  name: "todo-app",
+  status: "dead",
+  daysInactive: 412,
+  ciState: "failing",
+  failingChecks: 1,
+  outdatedDeps: null,
+  openIssues: 2,
+  archived: true,
+  stars: 3,
+});
 
 describe("ResurrectSuccessSchema bodies vs the browser client schema", () => {
   it("accepts a source ai body", () => {

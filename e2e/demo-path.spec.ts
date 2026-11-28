@@ -80,7 +80,7 @@ test("demo path: from the landing page to a revival plan", async ({ page }) => {
     drawer.getByRole("heading", { name: "Revival plan" }),
   ).toBeVisible();
   await expect(drawer.getByText(MOCK_PLAN.diagnosis)).toBeVisible();
-  await expect(drawer.getByText(MOCK_PLAN.smallestNextStep)).toBeVisible();
+  await expect(drawer.getByText(MOCK_PLAN.roadmap[0].action)).toBeVisible();
   await expect(drawer.getByText("A weekend")).toBeVisible();
 
   // The resurrect request named the right repo and used demo mode. No owner is sent.

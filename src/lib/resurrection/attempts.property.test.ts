@@ -2,14 +2,9 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import type { LlmResult } from "@/lib/llm";
 import { runAttempts } from "./attempts";
+import { VALID_PLAN_TEXT } from "./plan.fixtures";
 
-const VALID = JSON.stringify({
-  diagnosis: "Paused.",
-  smallestNextStep: "Run it.",
-  effort: "a weekend",
-  issueTitle: "Revive it",
-  issueBody: "- [ ] go",
-});
+const VALID = VALID_PLAN_TEXT;
 
 type Step = "valid" | "invalid" | "timeout" | "reject";
 const stepArb = fc.constantFrom<Step>("valid", "invalid", "timeout", "reject");
