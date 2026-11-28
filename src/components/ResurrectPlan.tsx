@@ -304,7 +304,7 @@ export function ResurrectPlan({
           ) : null
         ) : (
           <div className="resurrect-actions">
-            <button type="button" className="resurrect-button" onClick={onCopy}>
+            <button type="button" className="btn btn-secondary resurrect-button" onClick={onCopy}>
               {copy === "copied" ? (
                 <>
                   <span aria-hidden="true">{"\u2713"} </span>Copied
@@ -315,7 +315,7 @@ export function ResurrectPlan({
             </button>
             <button
               type="button"
-              className="resurrect-button resurrect-button-primary"
+              className="btn btn-primary resurrect-button"
               aria-disabled={demo || issue.phase === "pending" ? "true" : undefined}
               aria-describedby={demo ? demoNoteId : undefined}
               onClick={onFile}

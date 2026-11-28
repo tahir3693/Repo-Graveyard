@@ -18,7 +18,7 @@ function DemoForm() {
   return (
     <form action="/graveyard" method="get" className="landing-demo-form">
       <input type="hidden" name="demo" value="1" />
-      <button type="submit" className="landing-action landing-action-secondary">
+      <button type="submit" className="btn btn-secondary btn-lg">
         Try demo graveyard
       </button>
     </form>
@@ -46,7 +46,7 @@ export function LandingActions({
           </>
         ) : (
           <>
-            <a href="/graveyard" className="landing-action landing-action-primary">
+            <a href="/graveyard" className="btn btn-primary btn-lg">
               Open my graveyard
             </a>
             <DemoForm />

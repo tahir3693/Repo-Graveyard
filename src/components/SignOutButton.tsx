@@ -6,7 +6,7 @@ export interface SignOutButtonProps {
   className?: string;
 }
 
-export function SignOutButton({ className = "landing-signout" }: SignOutButtonProps) {
+export function SignOutButton({ className = "btn btn-secondary" }: SignOutButtonProps) {
   return (
     <button type="button" className={className} onClick={() => startSignOut()}>
       Sign out

@@ -39,7 +39,7 @@ describe("GraveDrawer", () => {
     expect(html).toContain("Death score");
     expect(html).toContain("Cause of death:");
     expect(html).toContain(entry.tombstone.cause.label);
-    expect(html).toMatch(/<button[^>]*class="drawer-close"[^>]*>.*Close<\/button>/);
+    expect(html).toMatch(/<button[^>]*class="btn btn-secondary drawer-close"[^>]*>.*Close<\/button>/);
   });
 
   it("lists the five facts, with failing CI spelled out", () => {

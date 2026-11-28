@@ -3,16 +3,24 @@
 /*
  * Design tokens. Source of truth: .kiro/steering/design-system.md.
  * Components use these variables only, never raw colors.
- * The app is dark only.
+ * The app is dark only. Every text pair below is checked for contrast (see the doc).
  */
 :root {
   color-scheme: dark;
 
-  /* Surfaces */
+  /* Surfaces: page, panel, raised card. Each step is a little lighter. */
   --color-bg: #0a0f1f; /* near-black blue, page background */
-  --color-surface: #121a31; /* cards, panels */
-  --color-surface-raised: #1b2542; /* tombstones, hovered surfaces */
-  --color-border: #2c3860;
+  --color-surface: #121a31; /* panels, tables, drawer */
+  --color-surface-2: #26335d; /* raised cards: tombstones, fact tiles, plan sections */
+  --color-surface-raised: var(--color-surface-2); /* older name for the same level */
+  /* Raised cards and secondary buttons with a violet tint, for hover and press. */
+  --color-surface-2-hover: color-mix(in srgb, var(--color-glow) 14%, var(--color-surface-2));
+  --color-surface-2-active: color-mix(in srgb, var(--color-glow) 24%, var(--color-surface-2));
+
+  /* Borders: hairline dividers, default card edge, and control edge (3:1 or better). */
+  --color-border-subtle: #2c3860;
+  --color-border: #3f4d7e;
+  --color-border-strong: #7283bd;
 
   /* Text */
   --color-text: #ebe6d6; /* bone white */
@@ -20,18 +28,40 @@
 
   /* Accent: eerie violet glow (the only accent) */
   --color-glow: #b79cff;
-  --color-glow-soft: rgb(183 156 255 / 0.25); /* halos and shadows */
+  --color-glow-hover: #cdbcff; /* primary button on hover */
+  --color-glow-active: #9d82f2; /* primary button while pressed */
+  --color-glow-soft: rgb(183 156 255 / 0.25); /* halos and glows */
+  --color-glow-faint: rgb(183 156 255 / 0.12); /* hover wash on quiet and secondary buttons */
 
   /* Failing states: ember (the only warning color) */
   --color-ember: #ff7a45;
   --color-ember-soft: rgb(255 122 69 / 0.25);
 
-  /* Focus */
+  /* Focus ring: 2px solid, 2px off the control */
   --color-focus: var(--color-glow);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring: var(--focus-ring-width) solid var(--color-focus);
 
   /* Typography: --font-cinzel and --font-inter are set by next/font in layout.tsx */
   --font-display: var(--font-cinzel), serif;
   --font-body: var(--font-inter), sans-serif;
+
+  /* Type scale. Sizes that grow with the screen use clamp(), so a phone gets the
+     minimum and a desktop gets the maximum. Nothing is below 16px. */
+  --text-display: clamp(2rem, 1.25rem + 3.2vw, 3.5rem); /* landing hero */
+  --text-h1: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem); /* page title */
+  --text-h2: clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem); /* drawer title, section title */
+  --text-h3: 1.25rem; /* card and stone titles (display font floor is 20px) */
+  --text-body: 1.0625rem; /* reading text */
+  --text-small: 1rem; /* UI text: buttons, labels, data (16px floor) */
+
+  /* Line heights and letter spacing */
+  --leading-tight: 1.2; /* display, h1 */
+  --leading-snug: 1.3; /* h2, h3 */
+  --leading-body: 1.5; /* everything else */
+  --tracking-display: 0.01em; /* large Cinzel */
+  --tracking-label: 0.05em; /* small-caps Cinzel at h3 size and below */
 
   /* Spacing: 4px base scale */
   --space-1: 4px;
@@ -43,17 +73,22 @@
   --space-12: 48px;
   --space-16: 64px;
 
-  /* Radius */
-  --radius-sm: 6px; /* chips and inputs */
-  --radius-md: 12px; /* cards and buttons */
-  --radius-lg: 20px; /* panels */
+  /* Radius: two sizes, plus the tombstone arch and the full circle */
+  --radius-sm: 6px; /* chips, badges, inputs */
+  --radius-md: 12px; /* buttons, cards, panels */
+  --radius-lg: var(--radius-md); /* older name, now the same as md */
   --radius-tomb: 40% 40% 6px 6px / 28% 28% 6px 6px; /* tombstone tops (arched) */
-  --radius-full: 9999px;
+  --radius-full: 9999px; /* dots and circles only */
 
-  /* Motion durations */
-  --motion-fast: 200ms; /* hover, focus */
-  --motion-base: 400ms; /* enter, exit */
+  /* Elevation: two levels, both soft violet glows. No dark drop shadows. */
+  --elevation-1: 0 0 var(--space-4) var(--color-glow-faint); /* cards, button hover */
+  --elevation-2: 0 0 var(--space-6) var(--color-glow-soft); /* drawer, overlays */
+
+  /* Motion: short and calm, one easing */
+  --motion-fast: 150ms; /* hover, focus, press */
+  --motion-base: 300ms; /* enter, exit */
   --motion-slow: 1200ms; /* loops start here; fog drift and candle flicker run 1200ms to 6000ms */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @theme inline {
@@ -64,17 +99,172 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
 }
 
-/* Honor reduced motion: no loops, near-instant transitions (design-system.md, Motion). */
+/*
+ * Headings. Display text balances its lines and breaks only at hyphens or spaces, so a
+ * long repo name never splits mid-word on a phone. A word that cannot fit on a line by
+ * itself is the only thing allowed to break.
+ */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  hyphens: manual;
+}
+
+h1,
+h2 {
+  letter-spacing: var(--tracking-display);
+}
+
+h3 {
+  letter-spacing: var(--tracking-label);
+}
+
+/* One focus ring for every control. Components may restate it; the values are the same. */
+:where(a, button, select, summary, input, textarea, [tabindex]):focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/*
+ * Buttons: one base and three styles (primary, secondary, quiet).
+ * The base is at least 44px high. States change only color, border color and glow, never
+ * size, padding, border width or position, so nothing shifts on hover or press.
+ * Each style sets three variables; the base reads them.
+ */
+.btn {
+  --btn-bg: var(--color-surface-2);
+  --btn-fg: var(--color-text);
+  --btn-border: var(--color-border-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-md);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  font-weight: 600;
+  line-height: var(--leading-body);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-fast) var(--ease),
+    border-color var(--motion-fast) var(--ease),
+    color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease);
+}
+
+/* The larger size for page-level actions. Still no layout change between states. */
+.btn-lg {
+  min-height: var(--space-12);
+  padding: var(--space-3) var(--space-6);
+}
+
+/* Primary: the one main action on a screen. */
+.btn-primary {
+  --btn-bg: var(--color-glow);
+  --btn-fg: var(--color-bg);
+  --btn-border: var(--color-glow);
+}
+
+.btn-primary:hover {
+  --btn-bg: var(--color-glow-hover);
+  --btn-border: var(--color-glow-hover);
+  box-shadow: var(--elevation-1);
+}
+
+.btn-primary:active {
+  --btn-bg: var(--color-glow-active);
+  --btn-border: var(--color-glow-active);
+  box-shadow: none;
+}
+
+/* Secondary: an alternative or a helper action. */
+.btn-secondary:hover {
+  --btn-bg: var(--color-surface-2-hover);
+  --btn-border: var(--color-glow);
+  box-shadow: var(--elevation-1);
+}
+
+.btn-secondary:active {
+  --btn-bg: var(--color-surface-2-active);
+  --btn-border: var(--color-glow);
+  box-shadow: none;
+}
+
+/* Quiet: navigation and low-priority actions. No edge until hover. */
+.btn-quiet {
+  --btn-bg: transparent;
+  --btn-border: transparent;
+}
+
+.btn-quiet:hover {
+  --btn-bg: var(--color-glow-faint);
+  --btn-border: var(--color-glow-faint);
+}
+
+.btn-quiet:active {
+  --btn-bg: var(--color-glow-soft);
+  --btn-border: var(--color-glow-soft);
+}
+
+/* A toggle that is on looks like the primary style, and also shows a check mark in its markup. */
+.btn[aria-pressed="true"] {
+  --btn-bg: var(--color-glow);
+  --btn-fg: var(--color-bg);
+  --btn-border: var(--color-glow);
+}
+
+.btn[aria-pressed="true"]:hover {
+  --btn-bg: var(--color-glow-hover);
+  --btn-border: var(--color-glow-hover);
+}
+
+.btn:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* Disabled: flat, muted, no glow. aria-disabled keeps the button focusable for screen readers. */
+.btn:disabled,
+.btn[aria-disabled="true"],
+.btn:disabled:hover,
+.btn[aria-disabled="true"]:hover,
+.btn:disabled:active,
+.btn[aria-disabled="true"]:active {
+  --btn-bg: var(--color-surface);
+  --btn-fg: var(--color-text-muted);
+  --btn-border: var(--color-border);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/*
+ * Honor reduced motion: no loops, no transitions, no smooth scrolling. State is still
+ * readable with no motion. Components with their own animation also turn it off.
+ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }

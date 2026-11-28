@@ -139,7 +139,7 @@ export function GraveDrawer({
           <h2 id={headingId} ref={headingRef} tabIndex={-1} className="drawer-title">
             {name}
           </h2>
-          <button type="button" className="drawer-close" onClick={onClose}>
+          <button type="button" className="btn btn-secondary drawer-close" onClick={onClose}>
             <span aria-hidden="true">{"\u00d7"}</span>
             Close
           </button>
@@ -173,7 +173,7 @@ export function GraveDrawer({
         <p className="drawer-epitaph">{epitaph}</p>
 
         {isGithubUrl(url) ? (
-          <a className="drawer-link" href={url} target="_blank" rel="noopener noreferrer">
+          <a className="btn btn-secondary drawer-link" href={url} target="_blank" rel="noopener noreferrer">
             Open on GitHub
           </a>
         ) : null}

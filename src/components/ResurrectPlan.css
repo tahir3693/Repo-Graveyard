@@ -59,9 +59,9 @@
   margin: 0;
   padding: var(--space-1) var(--space-3);
   border: 1px solid currentColor;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   color: var(--color-glow);
-  font-size: 1.25rem;
+  font-size: var(--text-h3);
   font-weight: 700;
   line-height: 1.5;
 }

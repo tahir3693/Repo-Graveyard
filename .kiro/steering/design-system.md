@@ -4,19 +4,26 @@ The UI is a haunted graveyard. Every spooky element carries data (see Visual voc
 
 ## Hard rule: use tokens, never raw colors
 
-Components must use the CSS variables below, through Tailwind theme mappings or `var(--...)`. Never hard-code hex, rgb or hsl values in components. New colors are added here first, as a variable.
+Components must use the CSS variables below, through Tailwind theme mappings or `var(--...)`. Never hard-code hex, rgb or hsl values in components. New colors are added here first, as a variable. `src/app/globals.css` is the source of truth; this file must match it.
 
 ## Palette
 
-Define these in `src/app/globals.css` on `:root`. The app is dark only.
+Defined in `src/app/globals.css` on `:root`. The app is dark only.
 
 ```css
 :root {
-  /* Surfaces */
+  /* Surfaces: page, panel, raised card. Each step is a little lighter. */
   --color-bg: #0a0f1f;          /* near-black blue, page background */
-  --color-surface: #121a31;     /* cards, panels */
-  --color-surface-raised: #1b2542; /* tombstones, hovered surfaces */
-  --color-border: #2c3860;
+  --color-surface: #121a31;     /* panels, tables, drawer */
+  --color-surface-2: #26335d;   /* raised cards: tombstones, fact tiles, plan sections */
+  --color-surface-raised: var(--color-surface-2); /* older name for the same level */
+  --color-surface-2-hover: color-mix(in srgb, var(--color-glow) 14%, var(--color-surface-2));
+  --color-surface-2-active: color-mix(in srgb, var(--color-glow) 24%, var(--color-surface-2));
+
+  /* Borders */
+  --color-border-subtle: #2c3860; /* hairline dividers (table rows, header rule) */
+  --color-border: #3f4d7e;        /* default card and tile edge */
+  --color-border-strong: #7283bd; /* edge of a control: 3:1 or better on every surface */
 
   /* Text */
   --color-text: #ebe6d6;        /* bone white */
@@ -24,18 +31,28 @@ Define these in `src/app/globals.css` on `:root`. The app is dark only.
 
   /* Accent: eerie violet glow (the only accent) */
   --color-glow: #b79cff;
-  --color-glow-soft: rgb(183 156 255 / 0.25); /* halos and shadows */
+  --color-glow-hover: #cdbcff;  /* primary button on hover */
+  --color-glow-active: #9d82f2; /* primary button while pressed */
+  --color-glow-soft: rgb(183 156 255 / 0.25); /* halos and glows */
+  --color-glow-faint: rgb(183 156 255 / 0.12); /* hover wash on quiet buttons */
 
   /* Failing states: ember (the only warning color) */
   --color-ember: #ff7a45;
   --color-ember-soft: rgb(255 122 69 / 0.25);
 
-  /* Focus */
+  /* Focus ring: 2px solid, 2px off the control */
   --color-focus: var(--color-glow);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+  --focus-ring: var(--focus-ring-width) solid var(--color-focus);
 }
 ```
 
-Use violet for interactive and alive-related emphasis. Use ember only for failing or dying states (failing CI, errors, `dead` and `ancient` emphasis). Do not add other accent colors.
+Use violet for interactive and alive-related emphasis. Use ember only for failing or dying states (failing CI, errors, `dead` and `ancient` emphasis). A neutral notice, such as "not signed in", uses `--color-border-strong`, not ember. Do not add other accent colors.
+
+Surface and border use:
+- Page: `--color-bg`. Panels and tables: `--color-surface`. Raised cards: `--color-surface-2` with `--elevation-1`.
+- Cards and tiles use `--color-border`. Dividers use `--color-border-subtle`. Controls (buttons, selects) use `--color-border-strong`.
 
 ## Typography
 
@@ -44,31 +61,70 @@ Both fonts are free (Google Fonts, OFL). Load them with `next/font/google` and e
 - Display (headings, tombstone names, epitaphs): **Cinzel**, serif fallback. Variable `--font-display`.
 - Body (UI text, data, buttons): **Inter**, sans-serif fallback. Variable `--font-body`.
 
+### Type scale
+
+Sizes that grow with the screen use `clamp()`: a phone gets the minimum, a desktop the maximum. Nothing is smaller than 16px.
+
+| Token | Value | At 360px | At 1280px | Use | Line height |
+|---|---|---|---|---|---|
+| `--text-display` | `clamp(2rem, 1.25rem + 3.2vw, 3.5rem)` | 32px | 56px | landing hero | `--leading-tight` (1.2) |
+| `--text-h1` | `clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem)` | 28px | 40px | page title | `--leading-tight` (1.2) |
+| `--text-h2` | `clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem)` | 24px | 30px | drawer title, section title | `--leading-snug` (1.3) |
+| `--text-h3` | `1.25rem` | 20px | 20px | card, stone and panel titles | `--leading-snug` (1.3) |
+| `--text-body` | `1.0625rem` | 17px | 17px | reading text | `--leading-body` (1.5) |
+| `--text-small` | `1rem` | 16px | 16px | UI text: buttons, labels, data | `--leading-body` (1.5) |
+
+Letter spacing: `--tracking-display: 0.01em` for display, h1 and h2. `--tracking-label: 0.05em` for Cinzel at h3 size and below (stone names, wordmark, card titles). Cinzel sets lowercase as small caps, so these are the small-caps labels.
+
 Rules:
-- Use the display font for headings only, at 20px or larger. Never for long paragraphs or small data.
+- Use the display font for headings only, at 20px or larger (`--text-h3` is the floor). Never for long paragraphs or small data.
 - Body text is at least 16px, with line height 1.5.
 - Numbers and metrics use the body font.
+- `h1`, `h2` and `h3` set `text-wrap: balance`, `overflow-wrap: break-word` and `hyphens: manual`. A long repo name breaks only at hyphens and spaces, balanced across lines. Only a word that cannot fit on a line alone may break mid-word.
+- Use the scale tokens for font sizes. Do not add one-off sizes.
 
-## Spacing and radius
+## Spacing, radius and elevation
 
 Spacing uses a 4px base scale: `--space-1: 4px`, `--space-2: 8px`, `--space-3: 12px`, `--space-4: 16px`, `--space-6: 24px`, `--space-8: 32px`, `--space-12: 48px`, `--space-16: 64px`. Do not use other spacing values.
 
-Radius:
-- `--radius-sm: 6px` for chips and inputs
-- `--radius-md: 12px` for cards and buttons
-- `--radius-lg: 20px` for panels
+Radius has two sizes:
+- `--radius-sm: 6px` for chips, badges and inputs (including the sort select)
+- `--radius-md: 12px` for buttons, cards and panels
+- `--radius-lg` is an older name for the same value as `--radius-md`. Do not use it in new code.
 - `--radius-tomb: 40% 40% 6px 6px / 28% 28% 6px 6px` for tombstone tops (arched)
-- `--radius-full: 9999px`
+- `--radius-full: 9999px` for dots, circles and progress bars only, never for chips or buttons
+
+Elevation has two levels. Both are soft violet glows, never dark drop shadows:
+- `--elevation-1: 0 0 var(--space-4) var(--color-glow-faint)` for raised cards and button hover
+- `--elevation-2: 0 0 var(--space-6) var(--color-glow-soft)` for the drawer, a hovered stone and overlays
+
+## Buttons
+
+Buttons are built from one base class and three styles, defined in `src/app/globals.css`. Do not write one-off button CSS in a component. Add the classes in the markup instead.
+
+| Class | Use | Rest | Hover | Pressed | Disabled |
+|---|---|---|---|---|---|
+| `.btn .btn-primary` | the one main action on a screen | `--color-glow` fill, `--color-bg` text | `--color-glow-hover` fill, `--elevation-1` | `--color-glow-active` fill, no glow | flat `--color-surface`, muted text, `--color-border` edge |
+| `.btn .btn-secondary` | an alternative or helper action | `--color-surface-2` fill, `--color-border-strong` edge | `--color-surface-2-hover` fill, `--color-glow` edge, `--elevation-1` | `--color-surface-2-active` fill | same flat look |
+| `.btn .btn-quiet` | navigation, low-priority actions | transparent, no edge | `--color-glow-faint` wash | `--color-glow-soft` wash | same flat look |
+
+Rules:
+- Every button is at least 44px high and 44px wide (`min-height`, `min-width`). `.btn-lg` raises the height to 48px for page-level actions.
+- Hover, press and focus change only color, edge color and glow. Never change size, padding, border width or position, so nothing shifts. The border is always 1px, and transparent on the quiet style.
+- Focus shows `outline: var(--focus-ring)` with `outline-offset: var(--focus-ring-offset)` on every control. The base `:focus-visible` rule in `globals.css` applies it to links, buttons, selects, summaries and inputs.
+- Disabled uses `disabled` or `aria-disabled="true"`. Prefer `aria-disabled` when the control must stay focusable, and give the reason in text (`aria-describedby`).
+- A toggle (filter chips, view toggle) is a `.btn .btn-secondary` with `aria-pressed`. On, it takes the primary look and shows a check mark in its markup, so it never relies on color alone.
+- One primary button per panel. Put the second action in `.btn-secondary` and the third in `.btn-quiet`.
 
 ## Motion
 
-Motion is slow, soft and ambient. It never blocks reading or interaction.
+Motion is short, calm and ambient. It never blocks reading or interaction.
 
-- Durations: `--motion-fast: 200ms` (hover, focus), `--motion-base: 400ms` (enter, exit), `--motion-slow: 1200ms` to `6000ms` (fog drift, candle flicker, loops).
-- Easing: ease-in-out or ease-out. No bounce, no snap, no shake.
+- Durations: `--motion-fast: 150ms` (hover, press, focus), `--motion-base: 300ms` (enter, exit), `--motion-slow: 1200ms` to `6000ms` (fog drift, candle flicker, loops).
+- Easing: one token, `--ease: cubic-bezier(0.4, 0, 0.2, 1)`, for every transition and CSS animation. No bounce, no snap, no shake. Framer Motion in JavaScript uses `easeOut`.
 - No flashing. Nothing flickers faster than 3 times per second.
-- Animate `opacity` and `transform` only, where possible.
-- **Always honor `prefers-reduced-motion: reduce`.** When set, turn off loops (fog drift, flicker, floating), and replace transitions with instant changes or a simple fade of 150ms or less. State must still be readable with no motion.
+- Animate `opacity`, `transform` and `box-shadow` only, where possible.
+- **Always honor `prefers-reduced-motion: reduce`.** `globals.css` forces every animation and transition to end at once, with no delay and no smooth scrolling. Loops (fog drift, flicker, floating) stop. State must still be readable with no motion.
 - Framer Motion: use `useReducedMotion()` or `MotionConfig reducedMotion="user"` at the app root.
 
 ## Visual vocabulary
@@ -102,9 +158,27 @@ Examples:
 ## Accessibility
 
 - **Contrast:** WCAG AA at minimum. Body text 4.5:1 or better, large text and UI components 3:1 or better. Check any new token pair before use. Do not put muted text on glow or ember backgrounds.
-- **Keyboard:** Every interactive element is reachable and usable with the keyboard, in a logical tab order. Tombstones are focusable controls, not click-only divs. Show a visible focus ring with `--color-focus` (at least 2px, with offset).
+- **Keyboard:** Every interactive element is reachable and usable with the keyboard, in a logical tab order. Tombstones are focusable controls, not click-only divs. Show a visible focus ring with `--focus-ring` (2px, with a 2px offset).
 - **Status never by color alone:** Always pair color with a text label and an icon or shape. Every status (`alive`, `dying`, `dead`, `ancient`) has a text label, and the visual vocabulary elements above have text equivalents.
 - **Screen readers:** Give each tombstone an accessible name with the repo name, status and cause of death. Decorative layers (fog, particles) use `aria-hidden`.
 - **Touch targets:** At least 44 by 44 px.
 - **Mobile-first:** Write styles for small screens first and add `sm:`, `md:` and `lg:` upwards. The graveyard scene must work at 360px wide with no horizontal scroll. Provide a plain list view as an equivalent to the scene.
 - **Zoom:** Layouts work at 200% zoom and with text-only enlargement.
+
+### Checked token pairs
+
+Measured with the WCAG relative-luminance formula. Hover and press fills are the blended colors the browser renders. Recheck a row whenever a token in it changes.
+
+| Pair | Ratio | Needs |
+|---|---|---|
+| text on bg / surface / surface-2 | 15.28 / 13.81 / 9.81 | 4.5 |
+| text on surface-2-hover / surface-2-active | 7.63 / 6.34 | 4.5 |
+| text on quiet hover wash / pressed wash (over bg) | 12.70 / 9.61 | 4.5 |
+| muted on bg / surface / surface-2 | 8.54 / 7.72 / 5.49 | 4.5 |
+| glow on bg / surface / surface-2 | 8.37 / 7.56 / 5.38 | 4.5 |
+| ember on bg / surface / surface-2 | 7.38 / 6.67 / 4.74 | 4.5 |
+| bg on glow / glow-hover / glow-active (primary button text) | 8.37 / 11.11 / 6.27 | 4.5 |
+| border-strong on bg / surface / surface-2 (control edge) | 5.17 / 4.68 / 3.32 | 3 |
+| glow on surface-2 / surface-2-hover / surface-2-active (hover edge, focus ring) | 5.38 / 4.18 / 3.47 | 3 |
+| border on bg / surface (card edge, not a control) | 2.34 / 2.11 | no minimum |
+| border-subtle on bg (divider) | 1.67 | no minimum |

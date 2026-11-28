@@ -18,11 +18,16 @@ export function GraveyardError({ code, onRetry, titleRef }: GraveyardErrorProps)
         {copy.title}
       </h2>
       <p className="graveyard-error-text">{copy.text}</p>
-      {copy.kind === "not_signed_in" ? <SignInButton className="graveyard-button" /> : null}
-      <button type="button" className="graveyard-button" onClick={onRetry}>
+      {copy.kind === "not_signed_in" ? <SignInButton className="btn btn-primary" /> : null}
+      {/* One primary action per panel: sign in when that is the problem, otherwise retry. */}
+      <button
+        type="button"
+        className={`btn ${copy.kind === "not_signed_in" ? "btn-secondary" : "btn-primary"}`}
+        onClick={onRetry}
+      >
         Try again
       </button>
-      <a href="/graveyard?demo=1" className="graveyard-button">
+      <a href="/graveyard?demo=1" className="btn btn-secondary">
         Try the demo graveyard
       </a>
     </div>

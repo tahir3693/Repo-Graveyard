@@ -45,7 +45,7 @@ export default function Home({ searchParams }: { searchParams: SearchParams }) {
             <Link href="/" className="landing-wordmark">
               Repo Graveyard
             </Link>
-            <a href="/graveyard?demo=1" className="landing-topbar-link">
+            <a href="/graveyard?demo=1" className="btn btn-secondary">
               Demo
             </a>
           </div>

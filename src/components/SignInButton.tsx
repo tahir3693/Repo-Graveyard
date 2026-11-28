@@ -13,7 +13,7 @@ export interface SignInButtonProps {
 }
 
 export function SignInButton({
-  className = "landing-action landing-action-primary",
+  className = "btn btn-primary btn-lg",
   configured = true,
   describedBy,
 }: SignInButtonProps) {

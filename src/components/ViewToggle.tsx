@@ -13,7 +13,7 @@ export function ViewToggle({ view, onChange }: ViewToggleProps) {
         <button
           key={mode}
           type="button"
-          className="graveyard-chip"
+          className="btn btn-secondary graveyard-chip"
           aria-pressed={view === mode}
           onClick={() => onChange(mode)}
         >

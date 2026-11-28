@@ -218,7 +218,7 @@ export function ResurrectArea({
           // while the request runs. aria-disabled (not disabled) keeps it focusable.
           <button
             type="button"
-            className="resurrect-button resurrect-button-primary"
+            className="btn btn-primary resurrect-button"
             aria-disabled={loading ? "true" : undefined}
             onClick={start}
           >

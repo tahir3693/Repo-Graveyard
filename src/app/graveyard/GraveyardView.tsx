@@ -162,7 +162,7 @@ export function GraveyardView({ demo, initialView = "graveyard", login = null }:
   const emptyMessage = (
     <div className="graveyard-message graveyard-empty" role="status">
       <p className="graveyard-empty-title">No repos rest here.</p>
-      <button type="button" className="graveyard-button" onClick={() => setFilter("all")}>
+      <button type="button" className="btn btn-primary" onClick={() => setFilter("all")}>
         Show all
       </button>
     </div>

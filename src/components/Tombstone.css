@@ -22,11 +22,18 @@
   line-height: 1.5;
   text-align: center;
   cursor: pointer;
+  transition: box-shadow var(--motion-fast) var(--ease);
+}
+
+/* Hover and focus: a soft glow around the stone, on top of the ring below. */
+.tombstone:hover,
+.tombstone:focus-visible {
+  box-shadow: var(--elevation-2);
 }
 
 .tombstone:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 /* Hover and focus ring: opacity only, so the hit area never moves. */
@@ -37,7 +44,7 @@
   border-radius: var(--radius-tomb);
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--motion-fast) ease-out;
+  transition: opacity var(--motion-fast) var(--ease);
 }
 
 .tombstone:hover .tombstone-ring,
@@ -55,9 +62,11 @@
   line-clamp: 2;
   overflow-wrap: anywhere;
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: var(--text-h3);
   font-weight: 600;
-  line-height: 1.3;
+  letter-spacing: var(--tracking-label);
+  line-height: var(--leading-snug);
+  text-wrap: balance;
 }
 
 .tombstone-status {
@@ -197,7 +206,7 @@
   background:
     radial-gradient(ellipse 60% 100% at 30% 100%, var(--color-text-muted), transparent),
     radial-gradient(ellipse 50% 90% at 75% 100%, var(--color-text-muted), transparent);
-  animation: tombstone-fog-drift 6000ms ease-in-out infinite alternate;
+  animation: tombstone-fog-drift 6000ms var(--ease) infinite alternate;
   will-change: transform;
 }
 .tombstone-fog[data-step="light"] {

@@ -21,7 +21,7 @@ export function GraveyardHeader({ summary, badge, login, skippedCount = 0 }: Gra
   return (
     <header className="graveyard-header">
       <div className="graveyard-header-bar">
-        <Link href="/" className="graveyard-back">
+        <Link href="/" className="btn btn-quiet graveyard-back">
           <span aria-hidden="true">{"\u2190"} </span>Back to home
         </Link>
         {login === null ? null : (
@@ -29,7 +29,7 @@ export function GraveyardHeader({ summary, badge, login, skippedCount = 0 }: Gra
             <span className="graveyard-session-text">
               Signed in as <strong>{login}</strong>
             </span>
-            <SignOutButton className="graveyard-chip" />
+            <SignOutButton />
           </div>
         )}
       </div>

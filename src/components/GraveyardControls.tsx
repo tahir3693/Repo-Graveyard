@@ -36,7 +36,7 @@ export function GraveyardControls({
           <button
             key={value}
             type="button"
-            className="graveyard-chip"
+            className="btn btn-secondary graveyard-chip"
             aria-pressed={filter === value}
             onClick={() => onFilter(value)}
           >
